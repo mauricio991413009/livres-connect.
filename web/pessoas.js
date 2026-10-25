@@ -13,7 +13,12 @@ const ETAPA_DESC = ['1ª e 2ª visita', 'Aceitou Jesus', 'Estudos semanais', 'Pr
 const CANAIS = { whatsapp: 'WhatsApp', ligacao: 'Ligação', visita: 'Visita', culto: 'Conversa no culto', outro: 'Outro' };
 const SITUACOES = { ativo: 'Ativo', afastado: 'Afastado', transferido: 'Transferido', falecido: 'Falecido' };
 const INTERESSES = ['Conhecer a igreja', 'Receber oração', 'Aceitar Jesus', 'Conversar com um pastor', 'Voltar para a igreja'];
-const hoje = () => new Date().toISOString().slice(0, 10);
+// Data de hoje no fuso de quem usa (toISOString usaria o horário de Londres)
+const hoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const digitos = t => (t || '').replace(/\D/g, '');
+const fmtTel = t => { const d = digitos(t).replace(/^55(?=\d{10,11}$)/, ''); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : (t || ''); };
+const linkWhats = (t, msg) => { let d = digitos(t); if (d.length === 10 || d.length === 11) d = '55' + d; return d.length >= 12 ? 'https://wa.me/' + d + (msg ? '?text=' + encodeURIComponent(msg) : '') : null; };
+const botaoWhats = (p, sm = true) => { const l = linkWhats(p.telefone, `Olá, ${(p.nome || '').split(' ')[0]}! Aqui é da ${C.igrejaAtual().nome}. `); return l ? `<a class="btn ${sm ? 'sm' : ''} whats" href="${C.esc(l)}" target="_blank" rel="noopener">WhatsApp</a>` : ''; };
 const br = d => d ? d.slice(8, 10) + '/' + d.slice(5, 7) + '/' + d.slice(0, 4) : '';
 const brCurta = d => d ? d.slice(8, 10) + '/' + d.slice(5, 7) : '';
 const dias = d => d ? Math.max(0, Math.round((Date.parse(hoje()) - Date.parse(d.slice(0, 10))) / 864e5)) : null;
@@ -136,9 +141,9 @@ export async function abrirFicha(id, depois) {
   const recarregar = () => abrirFicha(id, depois);
 
   const md = modal(`
-    <div class="mh"><div class="ficha-topo">${avatar(p, foto)}<div><h2>${esc(p.nome)}</h2><p>${etapaPill(p.etapa)} · ${dias(inicioEtapa)} dias nesta etapa · Matrícula ${matricula(p)}</p></div></div><button class="x" data-fechar aria-label="Fechar">×</button></div>
+    <div class="mh"><div class="ficha-topo">${avatar(p, foto)}<div><h2>${esc(p.nome)}</h2><p>${etapaPill(p.etapa)} · ${dias(inicioEtapa)} dias nesta etapa · Matrícula ${matricula(p)}${p.telefone ? ' · <span class="num">' + esc(fmtTel(p.telefone)) + '</span>' : ''}</p></div></div><button class="x" data-fechar aria-label="Fechar">×</button></div>
     <div class="trilha">${C.ETAPAS.map((n, i) => `<div class="no stg ${i <= p.etapa ? 'sel' : ''}" style="--i:${i}"><span class="o">${i < p.etapa ? '✓' : i + 1}</span><span>${n}</span></div>`).join('')}</div>
-    ${ed ? `<div class="acts">${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : (p.etapa >= 4 ? '<div class="acts"><button class="btn sm" data-cart>Carteirinha</button></div>' : '')}
+    ${ed ? `<div class="acts">${botaoWhats(p)}${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : `<div class="acts">${botaoWhats(p)}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>`}
 
     <div class="duas">
       <section><div class="sec-t">Atividades da etapa ${C.ETAPAS[p.etapa]}</div>
@@ -148,6 +153,7 @@ export async function abrirFicha(id, depois) {
           <div class="fld"><label for="ct-canal">Canal</label><select id="ct-canal">${Object.entries(CANAIS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
           <div class="fld"><label for="ct-data">Data</label><input id="ct-data" type="date" value="${hoje()}" max="${hoje()}"></div>
           <div class="fld full"><label for="ct-res">Resumo</label><input id="ct-res" placeholder="Ex.: confirmou presença no domingo"></div>
+          <div id="ct-msg" class="fld full"></div>
           <div class="fa"><button class="btn sm pri" type="submit">Salvar contato</button></div></form>` : ''}
       </section>
       <section><div class="sec-t">Histórico</div>
@@ -203,7 +209,7 @@ export async function abrirFicha(id, depois) {
     e.preventDefault();
     C.ocupado(e.target.querySelector('[type=submit]'), async () => {
       const { error: er } = await sb.from('contatos').insert({ igreja_id: p.igreja_id, pessoa_id: id, canal: $v('ct-canal'), data: $v('ct-data') || hoje(), resumo: $v('ct-res') || null });
-      if (er) return C.toast(C.traduzErro(er));
+      if (er) return erroEm('ct-msg', er);
       C.toast('Contato registrado.'); recarregar();
     });
   };
@@ -281,7 +287,7 @@ export async function telaMembros(main) {
       .filter(p => !q || (p.nome + ' ' + (p.telefone || '') + ' ' + nomeMin(p.ministerio_id)).toLowerCase().includes(q));
     document.getElementById('m-lista').innerHTML = l.length ? `<div class="tw"><table><thead><tr><th>Nome</th><th>WhatsApp</th><th class="r">Idade</th><th>Ministério</th><th>Membro desde</th><th>Etapa</th><th>Situação</th></tr></thead><tbody>
       ${l.map(p => `<tr class="clicavel" data-ficha="${p.id}"><td><div class="who"><span class="av">${esc(iniciais(p.nome))}</span><div><b>${esc(p.nome)}</b><small>${matricula(p)}</small></div></div></td>
-      <td class="num" style="white-space:nowrap">${esc(p.telefone || '')}</td><td class="r num">${idade(p.nascimento)}</td><td>${esc(nomeMin(p.ministerio_id)) || '<span class="muted">—</span>'}</td>
+      <td class="num" style="white-space:nowrap">${esc(fmtTel(p.telefone))}</td><td class="r num">${idade(p.nascimento)}</td><td>${esc(nomeMin(p.ministerio_id)) || '<span class="muted">—</span>'}</td>
       <td class="num">${br(p.data_batismo || p.data_conversao || p.primeira_visita)}</td><td>${etapaPill(p.etapa)}</td>
       <td><span class="pill ${p.situacao === 'ativo' ? 'p-ok' : 'p-warn'}">${SITUACOES[p.situacao]}</span></td></tr>`).join('')}</tbody></table></div>
       <p class="muted" style="margin:10px 0 0;font-size:13px">${l.length} de ${(ps || []).length} membros. Clique em um nome para abrir a ficha.</p>`
@@ -332,8 +338,9 @@ export async function telaVisitantes(main) {
 
   const desenhar = () => {
     const l = acompanha.filter(p => filtroV.f === 'todos' || String(p.etapa) === filtroV.f).sort((a, b) => (b.primeira_visita || '').localeCompare(a.primeira_visita || ''));
-    document.getElementById('v-lista').innerHTML = l.length ? `<div class="tw"><table><thead><tr><th>Pessoa</th><th>1ª visita</th><th class="r">Visitas</th><th>Convidado por</th><th>Responsável</th><th>Último contato</th><th></th></tr></thead><tbody>
+    document.getElementById('v-lista').innerHTML = l.length ? `<div class="tw"><table><thead><tr><th>Pessoa</th><th>WhatsApp</th><th>1ª visita</th><th class="r">Visitas</th><th>Convidado por</th><th>Responsável</th><th>Último contato</th><th></th></tr></thead><tbody>
       ${l.map(p => `<tr><td><div class="who"><span class="av">${esc(iniciais(p.nome))}</span><div><button class="lk" data-ficha="${p.id}">${esc(p.nome)}</button><small>${C.ETAPAS[p.etapa]}${p.origem === 'qr' ? ' · via QR Code' : ''}${p.interesse ? ' · ' + esc(p.interesse) : ''}</small></div></div></td>
+      <td class="num" style="white-space:nowrap">${p.telefone ? `<a class="lk-tel" href="${esc(linkWhats(p.telefone) || '#')}" target="_blank" rel="noopener">${esc(fmtTel(p.telefone))}</a>` : '<span class="muted">—</span>'}</td>
       <td class="num">${brCurta(p.primeira_visita)}</td><td class="r num">${p.visitas}</td><td>${esc(p.convidado_por || '—')}</td>
       <td>${podeEditar(p) ? `<select data-resp="${p.id}" aria-label="Responsável"><option value="">Ninguém</option>${eq.map(e => `<option value="${e.user_id}" ${e.user_id === p.responsavel_id ? 'selected' : ''}>${esc(e.nome)}</option>`).join('')}</select>` : esc(nomeEquipe(eq, p.responsavel_id))}</td>
       <td>${contatoPill(ult[p.id] || null)}</td>
