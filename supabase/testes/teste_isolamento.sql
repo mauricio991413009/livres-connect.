@@ -24,7 +24,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000a
 select public.criar_igreja('Livres em Cristo', 'Blumenau', 'sc', 'pastor1@igreja1.test') as id \gset ig1_
 select public.criar_igreja('Vida Nova', 'Itajaí', 'SC', 'pastor2@igreja2.test') as id \gset ig2_
 select public._t('admin vê as 2 igrejas', (select count(*) from igrejas) = 2);
-select public._t('igreja nova vem com 8 ministérios', (select count(*) from ministerios where igreja_id = :'ig1_id') = 8);
+select public._t('igreja nova vem com 13 ministérios', (select count(*) from ministerios where igreja_id = :'ig1_id') = 13);
 select public._t('admin não vê as atividades internas da igreja', (select count(*) from jornada_atividades_modelo where igreja_id = :'ig1_id') = 0);
 reset role;
 select public._t('(conferido como dono) 21 atividades da Jornada criadas', (select count(*) from jornada_atividades_modelo where igreja_id = :'ig1_id') = 21);

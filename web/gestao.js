@@ -311,7 +311,7 @@ async function evento(ev, depois) {
 /* ================================================================== */
 const esc_sel = { evento: null };
 const linkEscala = t => location.origin + location.pathname + '#/escala/' + t;
-const gerenciaMin = min => C.pode(['pastor']) || C.S.vinculos.some(v => v.igreja_id === C.S.igrejaId && v.perfil === 'lider' && v.ativo !== false && v.ministerio_id === min);
+const gerenciaMin = min => C.pode(['pastor']) || C.lideraMin(min);
 
 export async function telaEscalas(main) {
   const { esc, sb } = C;
@@ -386,7 +386,7 @@ async function adicionar(minId, minNome, lista, depois) {
       <div class="fld"><label for="a-p">Voluntário</label><select id="a-p">${ord.map(v => `<option value="${v.pessoa_id}">${esc(v.nome)}${v.ministerio_id === minId ? ' · ' + esc(minNome) : ''}${ja.has(v.pessoa_id) ? ' · já escalado neste culto' : ''}</option>`).join('')}</select></div>
       <div id="a-msg"></div>
       <div class="fa"><button type="button" class="btn" data-fechar>Cancelar</button><button class="btn pri" type="submit">Escalar</button></div></form>`
-    : `<div class="vazio">Nenhum membro disponível para escalar. Só aparecem pessoas da etapa <b>Membro</b> em diante.${C.pode(['lider']) && !C.pode(['pastor']) ? ' Para um líder, aparecem só as pessoas do ministério dele.' : ''}</div>
+    : `<div class="vazio">Nenhum membro disponível para escalar. Só aparecem pessoas da etapa <b>Membro</b> em diante.${C.pode(['lider']) && !C.pode(['pastor']) ? ' Para quem lidera um ministério, aparecem as pessoas que acompanha e as do seu ministério.' : ''}</div>
        <div class="fa"><button type="button" class="btn" data-fechar>Fechar</button><a class="btn pri" href="#/membros" data-fechar>Cadastrar membro</a></div>`));
   const f = md.querySelector('#f-add'); if (f) f.onsubmit = e => {
     e.preventDefault();

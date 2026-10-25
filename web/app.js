@@ -7,6 +7,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import * as Pessoas from './pessoas.js';
 import * as Gestao from './gestao.js';
+import * as Estudos from './estudos.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -20,8 +21,28 @@ const dataHora = s => new Date(s).toLocaleString('pt-BR', { day: '2-digit', mont
 const dinheiro = c => (c / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const PERFIS = {
-  pastor: 'Pastor presidente', presbiterio: 'Presbitério', tesouraria: 'Tesouraria',
-  secretaria: 'Secretaria', lider: 'Líder de ministério', diacono: 'Diácono', membro: 'Membro'
+  pastor: 'Pastor presidente', pastora: 'Pastora', presbiterio: 'Presbitério', tesouraria: 'Tesouraria',
+  secretaria: 'Secretaria', lider: 'Líder de ministério', obreiro: 'Obreiro', missionario: 'Missionário',
+  evangelista: 'Evangelista', diacono: 'Diácono', membro: 'Membro'
+};
+// Perfis novos herdam as permissões equivalentes (o banco aplica a mesma regra em tem_perfil)
+const EQUIVALE = {
+  obreiro: ['lider'], missionario: ['lider'], evangelista: ['lider'],
+  pastora: ['presbiterio', 'secretaria', 'lider']
+};
+// Perfis que acompanham pessoas e podem liderar um ministério
+const LIDERANCA = ['lider', 'obreiro', 'missionario', 'evangelista', 'pastora'];
+const DESCRICAO_PERFIL = {
+  pastor: 'Acesso total: pessoas, financeiro, usuários e configurações.',
+  pastora: 'Acompanha toda a igreja e as anotações pastorais de quem acompanha; vê relatórios financeiros. Não lança no financeiro nem convida usuários.',
+  presbiterio: 'Vê pessoas, agenda, escalas e relatórios financeiros.',
+  tesouraria: 'Lança e confere o financeiro. Não vê dados das pessoas.',
+  secretaria: 'Cadastra e edita pessoas, agenda e fotos. Não vê o financeiro.',
+  lider: 'Acompanha as pessoas sob sua responsabilidade e monta a escala do seu ministério.',
+  obreiro: 'Acompanha as pessoas sob sua responsabilidade e monta a escala do ministério que lidera.',
+  missionario: 'Acompanha as pessoas sob sua responsabilidade e monta a escala do ministério que lidera.',
+  evangelista: 'Acompanha visitantes e novos convertidos sob sua responsabilidade.',
+  diacono: 'Vê a agenda e as escalas.'
 };
 const ETAPAS = ['Visitante', 'Novo convertido', 'Discipulado', 'Batismo', 'Membro', 'Formação', 'Serviço ministerial'];
 const TABELAS = {
@@ -45,6 +66,7 @@ const ICONS = {
   igreja: '<path d="M12 3v5M9.5 5.5h5M5 21V12l7-4 7 4v9M10 21v-4h4v4"/>',
   auditoria: '<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/>',
   seguranca: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  estudos: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0z"/><path d="M20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/>',
   plataforma: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'
 };
 const icon = n => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -56,6 +78,7 @@ const MODULOS = [
   { k: 'membros', l: 'Membros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'visitantes', l: 'Visitantes', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'jornada', l: 'Jornada da Alma', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
+  { k: 'estudos', l: 'Estudos', perfis: null },
   { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'] },
   { k: 'agenda', l: 'Agenda e eventos', perfis: null },
   { k: 'escalas', l: 'Escalas', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'] },
@@ -78,13 +101,15 @@ const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* s
 const ler = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
 const perfisAtuais = () => S.vinculos.filter(v => v.igreja_id === S.igrejaId).map(v => v.perfil);
-const pode = perfis => !perfis || perfisAtuais().some(p => perfis.includes(p));
+const pode = perfis => !perfis || perfisAtuais().some(p => perfis.includes(p) || (EQUIVALE[p] || []).some(x => perfis.includes(x)));
+const lideraMin = min => !!min && S.vinculos.some(v => v.igreja_id === S.igrejaId && LIDERANCA.includes(v.perfil) && v.ministerio_id === min);
 const igrejaAtual = () => S.igrejas.find(i => i.id === S.igrejaId);
 const rota = () => {
   const h = location.hash;
   if (!h || h.includes('access_token') || h.includes('error')) return 'painel';
   return h.replace(/^#\/?/, '').split('?')[0] || 'painel';
 };
+const estudosPublico = () => { const m = location.hash.match(/^#\/estudos\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const escalaPublica = () => { const m = location.hash.match(/^#\/escala\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const ir = r => { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); };
@@ -109,6 +134,7 @@ async function iniciar() {
   if (!configurado) return telaNaoConfigurado();
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
+  if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
   sb.auth.onAuthStateChange((evento, sessao) => {
     if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; telaNovaSenha(); return; }
     if (evento === 'SIGNED_OUT') { Object.assign(S, { user: null, vinculos: [], igrejas: [], admin: false }); telaEntrar(); }
@@ -149,6 +175,7 @@ async function carregarContexto() {
 window.addEventListener('hashchange', () => {
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
+  if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
   if (S.user && !S.recuperando) render();
 });
 
@@ -310,6 +337,7 @@ function render() {
   ({
     painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
     membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada,
+    estudos: Estudos.telaEstudos,
     financeiro: Gestao.telaFinanceiro, agenda: Gestao.telaAgenda, escalas: Gestao.telaEscalas
   })[r](main);
 }
@@ -371,8 +399,8 @@ async function telaUsuarios(main) {
     `<section class="panel"><h2>Convidar alguém</h2>
       <form class="f" id="f-conv">
         <div class="fld"><label for="ce">E-mail</label><input id="ce" type="email" required placeholder="nome@exemplo.com"></div>
-        <div class="fld"><label for="cp">Perfil</label><select id="cp">${['lider', 'diacono', 'secretaria', 'tesouraria', 'presbiterio', 'pastor'].map(k => `<option value="${k}">${PERFIS[k]}</option>`).join('')}</select></div>
-        <div class="fld full" id="cm-box" hidden><label for="cm">Ministério que lidera</label><select id="cm"></select></div>
+        <div class="fld"><label for="cp">Perfil</label><select id="cp">${['lider', 'obreiro', 'missionario', 'evangelista', 'diacono', 'secretaria', 'tesouraria', 'presbiterio', 'pastora', 'pastor'].map(k => `<option value="${k}">${PERFIS[k]}</option>`).join('')}</select><span class="dica" id="cp-desc"></span></div>
+        <div class="fld full" id="cm-box" hidden><label for="cm">Ministério que lidera</label><select id="cm"></select><span class="dica">Opcional para obreiro, missionário, evangelista e pastora. Quem lidera um ministério monta a escala dele.</span></div>
         <div id="msg" class="fld full"></div>
         <div class="fa"><button class="btn pri" type="submit">Enviar convite</button></div>
       </form></section>
@@ -385,8 +413,8 @@ async function telaUsuarios(main) {
     sb.from('convites').select('id,email,perfil,ministerio_id,criado_em').eq('igreja_id', S.igrejaId).is('aceito_em', null).order('criado_em', { ascending: false })
   ]);
   const nomeMin = id => ((mins || []).find(m => m.id === id) || {}).nome || '';
-  $('#cm').innerHTML = (mins || []).map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('');
-  $('#cp').onchange = () => { $('#cm-box').hidden = $('#cp').value !== 'lider'; };
+  $('#cm').innerHTML = '<option value="">Nenhum</option>' + (mins || []).map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('');
+  $('#cp').onchange = () => { $('#cm-box').hidden = !LIDERANCA.includes($('#cp').value); $('#cp-desc').textContent = DESCRICAO_PERFIL[$('#cp').value] || ''; };
   $('#cp').onchange();
 
   const ids = [...new Set((vins || []).map(v => v.user_id))];
@@ -409,7 +437,7 @@ async function telaUsuarios(main) {
     e.preventDefault();
     ocupado($('button[type=submit]', e.target), async () => {
       const perfil = $('#cp').value;
-      const reg = { igreja_id: S.igrejaId, email: $('#ce').value.trim().toLowerCase(), perfil, ministerio_id: perfil === 'lider' ? $('#cm').value || null : null };
+      const reg = { igreja_id: S.igrejaId, email: $('#ce').value.trim().toLowerCase(), perfil, ministerio_id: LIDERANCA.includes(perfil) ? $('#cm').value || null : null };
       const { error } = await sb.from('convites').insert(reg);
       if (error) return msgErro($('#msg'), /duplicate/i.test(error.message) ? 'Já existe um convite para este e-mail com este perfil.' : error);
       toast('Convite registrado. Se a pessoa já tem conta, o acesso já foi liberado.');
@@ -629,8 +657,9 @@ document.addEventListener('click', async e => {
   if (b.dataset.acao === 'recarregar') { await aposEntrar(); }
 });
 
-Pessoas.instalar({ sb, S, $, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
-Gestao.instalar({ sb, S, $, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, render });
+Pessoas.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
+Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon });
+Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 
 iniciar().catch(err => {
   console.error(err);

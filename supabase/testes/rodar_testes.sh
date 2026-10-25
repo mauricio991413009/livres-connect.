@@ -12,6 +12,10 @@ psql -d "$DB" -q -v ON_ERROR_STOP=1 \
   -f ../migrations/0002_restringir_funcoes.sql \
   -f ../migrations/0003_fase_pessoas.sql \
   -f ../migrations/0005_fase_gestao.sql \
+  -f ../migrations/0007_novos_perfis.sql \
+  -f ../migrations/0008_perfis_e_ministerios.sql \
+  -f ../migrations/0009_search_path.sql \
   -f teste_isolamento.sql \
   -f teste_pessoas.sql \
-  -f teste_gestao.sql | grep -E "FALHOU|aprovados|^ +[0-9]+ +\|" 
+  -f teste_gestao.sql \
+  -f teste_perfis.sql | grep -E "FALHOU|aprovados|^ +[0-9]+ +\|" 

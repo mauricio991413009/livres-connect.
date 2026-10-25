@@ -29,10 +29,16 @@ const etapaPill = i => `<span class="pill stg" style="--i:${i}"><span class="dot
 const contatoPill = d => { const n = dias(d); if (n === null) return '<span class="pill p-neu">sem contato</span>'; const c = n > 21 ? 'p-bad' : n > 10 ? 'p-warn' : 'p-ok'; return `<span class="pill ${c}">${n === 0 ? 'hoje' : n === 1 ? 'há 1 dia' : 'há ' + n + ' dias'}</span>`; };
 // Sem nenhum contato: precisa de atenção após 2 dias da 1ª visita. Com contato: após 10 dias do último.
 const precisaContato = (p, ultimo) => ultimo ? dias(ultimo) > 10 : (dias(p.primeira_visita) ?? 0) > 2;
+const botaoEstudos = p => {
+  if (p.etapa > 3) return '';
+  const link = location.origin + location.pathname + '#/estudos/' + p.igreja_id;
+  const w = linkWhats(p.telefone, `Olá, ${(p.nome || '').split(' ')[0]}! Que alegria ter você na família da ${C.igrejaAtual().nome}. Preparamos 10 estudos bíblicos para os seus primeiros passos com Jesus. Comece por aqui: ${link}`);
+  return w ? `<a class="btn sm" href="${C.esc(w)}" target="_blank" rel="noopener">Enviar estudos</a>` : '';
+};
 const linkFicha = () => location.origin + location.pathname + '#/ficha/' + C.S.igrejaId;
 function qrSvg(texto, celula = 4) { const q = qrcode(0, 'M'); q.addData(texto); q.make(); return q.createSvgTag({ cellSize: celula, margin: 2, scalable: true }); }
 function qrPng(texto) { const q = qrcode(0, 'M'); q.addData(texto); q.make(); return q.createDataURL(10, 4); }
-const podeEditar = p => C.pode(['pastor', 'secretaria']) || (C.pode(['lider']) && p.responsavel_id === C.S.user.id);
+const podeEditar = p => C.pode(['pastor', 'secretaria']) || (C.pode(['lider']) && (p.responsavel_id === C.S.user.id || C.lideraMin(p.ministerio_id)));
 const podeFoto = () => C.pode(['pastor', 'secretaria']);
 const podeAnotacao = p => C.pode(['pastor']) || (C.pode(['lider']) && p.responsavel_id === C.S.user.id);
 
@@ -143,7 +149,7 @@ export async function abrirFicha(id, depois) {
   const md = modal(`
     <div class="mh"><div class="ficha-topo">${avatar(p, foto)}<div><h2>${esc(p.nome)}</h2><p>${etapaPill(p.etapa)} · ${dias(inicioEtapa)} dias nesta etapa · Matrícula ${matricula(p)}${p.telefone ? ' · <span class="num">' + esc(fmtTel(p.telefone)) + '</span>' : ''}</p></div></div><button class="x" data-fechar aria-label="Fechar">×</button></div>
     <div class="trilha">${C.ETAPAS.map((n, i) => `<div class="no stg ${i <= p.etapa ? 'sel' : ''}" style="--i:${i}"><span class="o">${i < p.etapa ? '✓' : i + 1}</span><span>${n}</span></div>`).join('')}</div>
-    ${ed ? `<div class="acts">${botaoWhats(p)}${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : `<div class="acts">${botaoWhats(p)}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>`}
+    ${ed ? `<div class="acts">${botaoWhats(p)}${botaoEstudos(p)}${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : `<div class="acts">${botaoWhats(p)}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>`}
 
     <div class="duas">
       <section><div class="sec-t">Atividades da etapa ${C.ETAPAS[p.etapa]}</div>
@@ -476,4 +482,4 @@ export async function telaFichaPublica(igrejaId) {
 }
 
 // Ferramentas compartilhadas com a fase Gestão (gestao.js)
-export { modal, fecharModal, mh, $v, erroEm, hoje, br, brCurta, linkWhats, fmtTel, ministerios, qrSvg };
+export { modal, fecharModal, mh, $v, erroEm, hoje, br, brCurta, linkWhats, fmtTel, ministerios, qrSvg, qrPng };

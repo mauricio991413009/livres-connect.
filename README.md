@@ -8,6 +8,8 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 
 - **Base:** login com verificação em duas etapas, várias igrejas com dados isolados, perfis de acesso, convites, configurações da igreja e auditoria.
 - **Pessoas:** membros com foto e carteirinha digital, visitantes com ficha pública por QR Code (encaminhada automaticamente a um líder), Jornada da Alma em quadro com atividades por etapa, histórico de contatos e anotações pastorais restritas.
+- **Estudos para novo convertido:** 10 lições bíblicas com página pública aberta por QR Code (sem login), progresso salvo no celular do aluno, apostila para imprimir e botão "Enviar estudos" na ficha da pessoa.
+- **Perfis:** pastor presidente, pastora, presbitério, tesouraria, secretaria, líder, obreiro, missionário, evangelista e diácono.
 - **Gestão:** financeiro (lançamentos, contas a pagar e receber, comprovantes, campanhas, planilha e relatório para imprimir), agenda com eventos semanais e escalas com lembrete pelo WhatsApp e confirmação do voluntário por link, sem login.
 
 ---
@@ -121,8 +123,11 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0004_fotos.sql` | Pasta privada de fotos no Storage, separada por igreja |
 | `supabase/migrations/0005_fase_gestao.sql` | Forma de pagamento, séries de eventos, escala com link (`escala_do_evento`, `voluntarios`, `escala_publica`, `responder_escala`) |
 | `supabase/migrations/0006_comprovantes.sql` | Pasta privada de comprovantes financeiros |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (81 verificações) |
-| `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estilos.css`, `config.js` |
+| `supabase/migrations/0007_novos_perfis.sql` | Perfis pastora, obreiro, missionário e evangelista (arquivo separado porque o Postgres exige) |
+| `supabase/migrations/0008_perfis_e_ministerios.sql` | Permissões dos novos perfis (`tem_perfil`, `lidera_ministerio`) e ministérios de células, jovens, casais, homens e mulheres |
+| `supabase/migrations/0009_search_path.sql` | Ajuste de segurança em duas funções auxiliares |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (100 verificações) |
+| `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estudos.js` e `estudos-conteudo.js` (estudos para novo convertido; o texto das lições fica no segundo arquivo), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 
 **Decisões**
