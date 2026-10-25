@@ -326,7 +326,10 @@ export async function telaEscalas(main) {
   if (!esc_sel.evento || !evs.some(e => e.id === esc_sel.evento)) esc_sel.evento = evs[0].id;
   const ev = evs.find(e => e.id === esc_sel.evento);
   document.getElementById('s-evs').innerHTML = evs.map(e => `<button class="chip ${e.id === ev.id ? 'on' : ''}" data-ev="${e.id}">${esc(e.titulo)} · ${brCurta(e.data)}</button>`).join('');
-  const { data: sc, error } = await sb.rpc('escala_do_evento', { p_evento: ev.id });
+  const [{ data: sc, error }, { data: vols }] = await Promise.all([
+    sb.rpc('escala_do_evento', { p_evento: ev.id }),
+    C.pode(['pastor', 'lider']) ? sb.rpc('voluntarios', { p_igreja: C.S.igrejaId }) : Promise.resolve({ data: null })
+  ]);
   if (error) return erroEm('s-corpo', error);
   const lista = sc || [];
   const vezes = {}; lista.forEach(s => (vezes[s.pessoa_id] = (vezes[s.pessoa_id] || 0) + 1));
@@ -337,6 +340,10 @@ export async function telaEscalas(main) {
   document.getElementById('s-corpo').innerHTML = `
     <section class="panel resumo-escala"><div style="flex:1;min-width:220px"><h2 style="margin:0">${esc(ev.titulo)}</h2><div class="muted">${dataLonga(ev.data)}${ev.hora ? ' às ' + hora(ev.hora) : ''}${ev.local ? ' · ' + esc(ev.local) : ''}</div></div>
       <span class="pill p-ok">${lista.filter(s => s.status === 'confirmado').length} confirmados</span><span class="pill p-warn">${lista.filter(s => s.status === 'pendente').length} pendentes</span><span class="pill p-bad">${lista.filter(s => s.status === 'recusado').length} não podem</span></section>
+    ${vols && !vols.length ? `<div class="aviso ouro passos"><b>Para montar a escala, primeiro cadastre os voluntários como membros.</b>
+      <ol><li>Abra <a href="#/membros">Membros</a> e clique em <b>Novo membro</b> (ou avance uma pessoa até a etapa Membro na Jornada da Alma).</li>
+      <li>Na ficha, preencha o <b>WhatsApp</b> e o <b>ministério</b> em que ela serve.</li>
+      <li>Volte aqui, clique em <b>+ Adicionar</b> no ministério e depois em <b>Lembrar</b> para enviar o convite pelo WhatsApp.</li></ol></div>` : ''}
     ${conflitos.length ? `<div class="erro"><b>Conflito de escala:</b> ${conflitos.map(id => { const ss = lista.filter(s => s.pessoa_id === id); return esc(ss[0].nome) + ' está em ' + ss.map(s => nomeMin(s.ministerio_id)).join(' e '); }).join('; ')}.</div>` : ''}
     <div class="mins">${mins.map(m => { const a = lista.filter(s => s.ministerio_id === m.id), g = gerenciaMin(m.id); return `
       <section class="panel min"><h3>${esc(m.nome)}${g ? `<button class="btn sm ghost" data-add="${m.id}">+ Adicionar</button>` : ''}</h3>
@@ -379,7 +386,8 @@ async function adicionar(minId, minNome, lista, depois) {
       <div class="fld"><label for="a-p">Voluntário</label><select id="a-p">${ord.map(v => `<option value="${v.pessoa_id}">${esc(v.nome)}${v.ministerio_id === minId ? ' · ' + esc(minNome) : ''}${ja.has(v.pessoa_id) ? ' · já escalado neste culto' : ''}</option>`).join('')}</select></div>
       <div id="a-msg"></div>
       <div class="fa"><button type="button" class="btn" data-fechar>Cancelar</button><button class="btn pri" type="submit">Escalar</button></div></form>`
-    : '<div class="vazio">Nenhum membro disponível. Os voluntários precisam estar na etapa Membro em diante. Para um líder, aparecem só as pessoas do ministério dele.</div>'));
+    : `<div class="vazio">Nenhum membro disponível para escalar. Só aparecem pessoas da etapa <b>Membro</b> em diante.${C.pode(['lider']) && !C.pode(['pastor']) ? ' Para um líder, aparecem só as pessoas do ministério dele.' : ''}</div>
+       <div class="fa"><button type="button" class="btn" data-fechar>Fechar</button><a class="btn pri" href="#/membros" data-fechar>Cadastrar membro</a></div>`));
   const f = md.querySelector('#f-add'); if (f) f.onsubmit = e => {
     e.preventDefault();
     C.ocupado(e.target.querySelector('[type=submit]'), async () => {

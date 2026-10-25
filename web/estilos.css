@@ -288,3 +288,5 @@ button.pill{border:0;cursor:pointer;font:inherit;font-size:12px;font-weight:700}
 }
 @media (max-width:560px){form.f[style]{grid-template-columns:1fr!important}.bar{grid-template-columns:minmax(80px,110px) minmax(0,1fr) auto;font-size:13px}}
 .pill.quebra{white-space:normal}
+.aviso.passos ol{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.aviso.passos a{color:inherit;font-weight:700}
