@@ -145,10 +145,21 @@ export async function abrirFicha(id, depois) {
     ...(ct.data || []).map(x => ({ d: x.data, t: `${CANAIS[x.canal]}${x.resumo ? ': ' + x.resumo : ''}`, a: x.autor_id }))
   ].sort((a, b) => (b.d || '').localeCompare(a.d || ''));
   const recarregar = () => abrirFicha(id, depois);
+  // Progresso nos estudos para novo convertido (se a pessoa começou)
+  let estudos = '';
+  const { data: al } = await sb.from('estudos_alunos').select('id').eq('pessoa_id', id);
+  if (al && al.length) {
+    const { data: fe } = await sb.from('estudos_concluidos').select('estudo,concluido_em').in('aluno_id', al.map(a => a.id));
+    const nums = [...new Set((fe || []).map(f => f.estudo))].sort((a, b) => a - b);
+    const ult = (fe || []).map(f => f.concluido_em).sort().pop();
+    estudos = `<div class="estudos-ficha"><b>Estudos para novo convertido</b><div class="mini-prog"><div style="width:${nums.length * 10}%"></div></div>
+      <span>${nums.length} de 10${nums.length ? ' · concluídos: ' + nums.join(', ') : ''}${ult ? ' · último em ' + brCurta(ult) : ''}</span>${nums.length >= 10 ? '<span class="pill p-ok">concluiu ✓</span>' : ''}</div>`;
+  }
 
   const md = modal(`
     <div class="mh"><div class="ficha-topo">${avatar(p, foto)}<div><h2>${esc(p.nome)}</h2><p>${etapaPill(p.etapa)} · ${dias(inicioEtapa)} dias nesta etapa · Matrícula ${matricula(p)}${p.telefone ? ' · <span class="num">' + esc(fmtTel(p.telefone)) + '</span>' : ''}</p></div></div><button class="x" data-fechar aria-label="Fechar">×</button></div>
     <div class="trilha">${C.ETAPAS.map((n, i) => `<div class="no stg ${i <= p.etapa ? 'sel' : ''}" style="--i:${i}"><span class="o">${i < p.etapa ? '✓' : i + 1}</span><span>${n}</span></div>`).join('')}</div>
+    ${estudos}
     ${ed ? `<div class="acts">${botaoWhats(p)}${botaoEstudos(p)}${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : `<div class="acts">${botaoWhats(p)}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>`}
 
     <div class="duas">

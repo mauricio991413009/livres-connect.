@@ -173,6 +173,7 @@ async function carregarContexto() {
 }
 
 window.addEventListener('hashchange', () => {
+  const md = document.getElementById('modal'); if (md) md.innerHTML = '';  // fecha janela aberta ao trocar de tela
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
@@ -658,7 +659,7 @@ document.addEventListener('click', async e => {
 });
 
 Pessoas.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
-Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon });
+Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon, traduzErro, ocupado });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 
 iniciar().catch(err => {
