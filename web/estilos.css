@@ -395,3 +395,21 @@ input.nota.invalido{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)
 .licoes.grande i{width:30px;height:30px;font-size:13px;border-radius:8px}
 .lnk{font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
 .panel h2 .lnk{margin-left:auto}
+
+/* ---------- Oração e atendimento ---------- */
+.pedidos{display:flex;flex-direction:column;gap:10px}
+.pedido{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface)}
+.pedido header{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:14px}
+.pedido header .muted{font-size:13px}
+.pedido header .pill{margin-left:auto}
+.pedido header .pill .ic{width:13px;height:13px}
+.pedido p{margin:6px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pedido footer{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pedido footer .muted{margin-right:auto;font-size:13px}
+.testemunho{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 10px;font-size:14px;margin-bottom:8px}
+.privacidade{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
+.privacidade legend{font-size:13px;font-weight:600;padding:0 4px}
+.privacidade label{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer}
+.privacidade input{margin-top:3px;width:auto;flex:none;padding:0}
+.privacidade label span{flex:1}
+.abas-pub{margin-bottom:4px}
