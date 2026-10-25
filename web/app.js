@@ -11,6 +11,7 @@ import * as Estudos from './estudos.js';
 import * as Escola from './escola.js';
 import * as Discipulado from './discipulado.js';
 import * as Cuidado from './cuidado.js';
+import * as Comunicacao from './comunicacao.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -56,7 +57,7 @@ const TABELAS = {
   campanhas: 'Campanha', lancamentos: 'Lançamento financeiro',
   escola_turmas: 'Turma da Escola', escola_aulas: 'Aula da Escola', escola_alunos: 'Matrícula na Escola', escola_avaliacoes: 'Avaliação da Escola',
   discipulados: 'Discipulado', discipulado_encontros: 'Encontro de discipulado',
-  pedidos_oracao: 'Pedido de oração', atendimentos: 'Atendimento pastoral'
+  pedidos_oracao: 'Pedido de oração', atendimentos: 'Atendimento pastoral', comunicados: 'Comunicado'
 };
 const ACOES = { insert: 'criou', update: 'alterou', delete: 'excluiu' };
 
@@ -75,6 +76,7 @@ const ICONS = {
   escola: '<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4V11M21.5 9v5"/>',
   discipulado: '<circle cx="8" cy="7.5" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5M13.5 15.2c.9-.8 1.9-1.2 3-1.2 2.2 0 3.9 1.4 4.5 4"/>',
   cuidado: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  comunicacao: '<path d="M4 10v4h3l6 4V6L7 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/>',
   estudos: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0z"/><path d="M20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/>',
   plataforma: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'
 };
@@ -90,6 +92,7 @@ const MODULOS = [
   { k: 'estudos', l: 'Estudos', perfis: null },
   { k: 'discipulado', l: 'Discipulado', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'cuidado', l: 'Oração e atendimento', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'] },
+  { k: 'comunicacao', l: 'Comunicação', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'escola', l: 'Escola de Obreiros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'] },
   { k: 'agenda', l: 'Agenda e eventos', perfis: null },
@@ -359,7 +362,7 @@ function render() {
   ({
     painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
     membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada,
-    estudos: Estudos.telaEstudos, escola: Escola.telaEscola, discipulado: Discipulado.telaDiscipulado, cuidado: Cuidado.telaCuidado,
+    estudos: Estudos.telaEstudos, escola: Escola.telaEscola, discipulado: Discipulado.telaDiscipulado, cuidado: Cuidado.telaCuidado, comunicacao: Comunicacao.telaComunicacao,
     financeiro: Gestao.telaFinanceiro, agenda: Gestao.telaAgenda, escalas: Gestao.telaEscalas
   })[r](main);
 }
@@ -387,7 +390,8 @@ async function telaPainel(main) {
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Financeiro, agenda e escalas com confirmação pelo WhatsApp</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Estudos para novo convertido, discipulado com 8 lições e Escola de Obreiros com chamada, notas e certificado</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Pedidos de oração e atendimento pastoral com QR Code</span></div>
-      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Comunicação e portal do membro</span></div></div></section>`;
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Comunicação pelo WhatsApp com lista de envio e aniversariantes</span></div>
+      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Portal do membro</span></div></div></section>`;
 
   if (pode(['pastor', 'tesouraria'])) {
     const { data: f } = await sb.auth.mfa.listFactors();
@@ -693,6 +697,7 @@ Pessoas.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon
 Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon, traduzErro, ocupado });
 Discipulado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Cuidado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado });
+Comunicacao.instalar({ sb, S, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado });
 Escola.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 

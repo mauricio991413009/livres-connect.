@@ -413,3 +413,10 @@ input.nota.invalido{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)
 .privacidade input{margin-top:3px;width:auto;flex:none;padding:0}
 .privacidade label span{flex:1}
 .abas-pub{margin-bottom:4px}
+
+/* ---------- Comunicação ---------- */
+.previa{background:var(--surface-2);border:1px solid var(--line);border-radius:12px 12px 12px 2px;padding:10px 14px;font-size:14.5px;max-width:520px;overflow-wrap:anywhere}
+.envios{border:1px solid var(--line);border-radius:10px;max-height:48vh;overflow-y:auto}
+.envios .linha{padding:8px 12px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.envios .linha:first-child{border-top:0}
+.envios .linha.feito{background:var(--surface-2)}

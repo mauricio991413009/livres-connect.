@@ -12,6 +12,7 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 - **Escola de Obreiros:** turmas com professor responsável, matrícula de membros, aulas com chamada, avaliações com peso e notas, frequência e média automáticas, fechamento do resultado e certificado para imprimir com QR Code de verificação. O professor faz tudo pelo próprio acesso; matrícula e aprovação marcam a Jornada da Alma.
 - **Discipulado:** um membro acompanha cada novo convertido por 8 lições. A equipe registra cada encontro e a lição estudada, vê quem está parado há mais de duas semanas e envia ao discipulador o roteiro público das lições (sem login, com apostila para imprimir). Começar leva o novo convertido para a etapa Discipulado; concluir as 8 lições marca a Jornada.
 - **Oração e atendimento:** QR Code onde qualquer pessoa pede oração (escolhendo se só os pastores leem, se a equipe de intercessão também, ou se pode ir para o mural) ou pede para conversar com um pastor. A equipe ora ("Orei"), registra testemunhos e o pastor agenda o atendimento e avisa pelo WhatsApp. Mensagens de atendimento ficam só com o pastor, a pastora e quem foi designado.
+- **Comunicação:** comunicados para membros, novos convertidos, visitantes, quem serve ou um ministério. Cada pessoa recebe pelo WhatsApp com o próprio nome, e o sistema marca quem já recebeu. Texto pronto para grupos, aniversariantes da semana (nascimento e casamento) e modelos de mensagem. Quem lidera um ministério envia para o próprio ministério.
 - **Perfis:** pastor presidente, pastora, presbitério, tesouraria, secretaria, líder, obreiro, missionário, evangelista e diácono.
 - **Gestão:** financeiro (lançamentos, contas a pagar e receber, comprovantes, campanhas, planilha e relatório para imprimir), agenda com eventos semanais e escalas com lembrete pelo WhatsApp e confirmação do voluntário por link, sem login.
 
@@ -133,7 +134,8 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0011_escola_obreiros.sql` | Escola de Obreiros: turmas, aulas e chamada, avaliações e notas, certificado com verificação pública (`certificado_publico`) |
 | `supabase/migrations/0012_discipulado.sql` | Discipulado: discipulador e discípulo, encontros com a lição estudada (`discipulados_lista`, `discipuladores_possiveis`) |
 | `supabase/migrations/0013_oracao_atendimento.sql` | Pedidos de oração e atendimento pastoral, com página pública (`registrar_pedido_oracao`, `solicitar_atendimento`, `orar_por`); a auditoria deixa de fora os textos sigilosos |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (190 verificações) |
+| `supabase/migrations/0014_comunicacao.sql` | Comunicados por público e lista de envio pelo WhatsApp (`comunicado_destinatarios`, `comunicado_marcar`, `comunicados_resumo`) |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (206 verificações) |
 | `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estudos.js` e `estudos-conteudo.js` (estudos para novo convertido; o texto das lições fica no segundo arquivo), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 
