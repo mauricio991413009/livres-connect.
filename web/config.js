@@ -10,5 +10,5 @@
 // regras de acesso do banco. NUNCA cole aqui a "secret key" nem a
 // "service_role key".
 // =====================================================================
-export const SUPABASE_URL = 'COLE_AQUI_A_PROJECT_URL';
-export const SUPABASE_ANON_KEY = 'COLE_AQUI_A_PUBLISHABLE_KEY';
+export const SUPABASE_URL = 'https://gpbjusubgmisdqyjtqxq.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_QIRyFQAK4khMQDsNAY0_OA_f2IrhgS9';
