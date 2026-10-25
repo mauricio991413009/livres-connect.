@@ -1,0 +1,11 @@
+{
+  "name": "Livres Connect",
+  "short_name": "Livres Connect",
+  "description": "Gestão eclesiástica",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eef2ef",
+  "theme_color": "#0d6b61",
+  "lang": "pt-BR",
+  "icons": [{ "src": "icone.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

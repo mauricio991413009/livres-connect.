@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Livres Connect</title>
+  <meta name="description" content="Gestão eclesiástica: membros, visitantes, Jornada da Alma, financeiro, agenda e escalas.">
+  <meta name="theme-color" content="#0d6b61">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icone.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div id="app"><div class="carregando">Carregando…</div></div>
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="app.js"></script>
+  <script>
+    // Se o sistema não carregar em 12 segundos, mostra uma orientação em vez de uma tela parada.
+    setTimeout(function () {
+      var a = document.getElementById('app');
+      if (a && a.textContent.trim() === 'Carregando…') {
+        a.innerHTML = '<div class="auth"><div class="auth-card"><h1>Não foi possível carregar</h1><p>Confira sua conexão com a internet e recarregue a página. Se o problema continuar, avise o responsável pelo sistema.</p></div></div>';
+      }
+    }, 12000);
+  </script>
+</body>
+</html>
