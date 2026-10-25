@@ -13,6 +13,7 @@ import * as Discipulado from './discipulado.js';
 import * as Cuidado from './cuidado.js';
 import * as Comunicacao from './comunicacao.js';
 import * as Portal from './portal.js';
+import { ligarInstalar } from './instalar.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -165,7 +166,12 @@ async function iniciar() {
   });
   const { data } = await sb.auth.getSession();
   if (S.recuperando) return;
-  if (!data.session) return telaEntrar();
+  if (!data.session) {
+    // Celular de membro que já abriu o portal: o aplicativo instalado abre direto nele
+    const t = Portal.tokenGuardado();
+    if (t && (!location.hash || location.hash === '#' || location.hash === '#/')) { location.hash = '#/membro/' + t; return; }
+    return telaEntrar();
+  }
   if (location.hash.includes('access_token')) history.replaceState(null, '', location.pathname + '#/painel');
   await aposEntrar();
 }
@@ -387,7 +393,7 @@ async function telaPainel(main) {
   const hoje = new Date(), mesIni = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
   const vePessoas = pode(['pastor', 'presbiterio', 'secretaria', 'lider']);
   const veFin = pode(['pastor', 'presbiterio', 'tesouraria']);
-  main.innerHTML = cab('Olá, ' + esc(S.nome.split(' ')[0]), `${esc(ig.nome)}${ig.cidade ? ' · ' + esc(ig.cidade) + (ig.uf ? '/' + esc(ig.uf) : '') : ''} · ${perf.map(p => PERFIS[p]).join(', ')}`) + '<div id="avisos"></div><div class="kpis" id="kpis"><div class="carregando">Carregando números…</div></div>' +
+  main.innerHTML = cab('Olá, ' + esc(S.nome.split(' ')[0]), `${esc(ig.nome)}${ig.cidade ? ' · ' + esc(ig.cidade) + (ig.uf ? '/' + esc(ig.uf) : '') : ''} · ${perf.map(p => PERFIS[p]).join(', ')}`) + '<div id="avisos"></div><div id="instalar"></div><div class="kpis" id="kpis"><div class="carregando">Carregando números…</div></div>' +
     (vePessoas ? '<section class="panel" id="atencao"><div class="carregando">Carregando…</div></section>' : '') +
     `<section class="panel"><h2>Situação do projeto</h2><div class="lista">
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
@@ -399,6 +405,7 @@ async function telaPainel(main) {
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Portal do Membro no celular, com link pessoal sem senha</span></div>
       <div class="linha"><span class="pill p-neu">etapa 3</span><span class="cresce">Relatórios avançados, automações e recursos de inteligência artificial</span></div></div></section>`;
 
+  ligarInstalar(document.getElementById('instalar'));
   if (pode(['pastor', 'tesouraria'])) {
     const { data: f } = await sb.auth.mfa.listFactors();
     if (!(f && f.totp && f.totp.length)) $('#avisos').innerHTML = `<div class="aviso ouro">Seu perfil acessa dados sensíveis. Ative a <a href="#/seguranca">verificação em duas etapas</a> para proteger sua conta.</div>`;
@@ -599,7 +606,10 @@ async function telaSeguranca(main) {
     <section class="panel c12"><h2>Verificação em duas etapas</h2><div id="mfa">
       ${ativo ? `<div class="linha"><span class="pill p-ok">ativa</span><span class="cresce">Ao entrar, o sistema pede o código do seu aplicativo autenticador.</span><button class="btn sm danger" data-acao="desativar-2fa" data-id="${ativo.id}">Desativar</button></div>`
       : `<p>Protege sua conta mesmo que alguém descubra sua senha. Você vai precisar de um aplicativo autenticador gratuito no celular, como Google Authenticator ou Microsoft Authenticator.</p><button class="btn pri" data-acao="ativar-2fa">Ativar verificação em duas etapas</button>`}
-    </div></section></div>`;
+    </div></section>
+    <section class="panel c12"><h2>Aplicativo no celular</h2><div id="instalar-conta"></div>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">Funciona no Android e no iPhone, sem loja de aplicativos e sem custo. As atualizações chegam sozinhas.</p></section></div>`;
+  ligarInstalar(document.getElementById('instalar-conta'), true);
 
   $('#f-nome').onsubmit = e => {
     e.preventDefault();

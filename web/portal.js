@@ -5,6 +5,7 @@
 import { modal, fecharModal, mh, $v, erroEm, hoje, br, brCurta, linkWhats, fmtTel, qrSvg } from './pessoas.js';
 import { LICOES, linkRoteiro } from './discipulado.js';
 import { ASSUNTOS } from './cuidado.js';
+import { ligarInstalar } from './instalar.js';
 
 let C;
 export function instalar(ctx) { C = ctx; }
@@ -96,6 +97,16 @@ export async function telaPortal(token) {
     return;
   }
   guardarToken(token);
+  // Ao instalar a partir desta página, o aplicativo abre direto no portal deste membro
+  try {
+    const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+    const man = { id: '/membro', name: 'Portal do Membro · ' + D.igreja.nome, short_name: 'Minha igreja', start_url: linkPortal(token), scope: base,
+      display: 'standalone', orientation: 'portrait', background_color: '#eef2ef', theme_color: '#0d6b61', lang: 'pt-BR',
+      icons: [{ src: base + 'icones/icone-192.png', sizes: '192x192', type: 'image/png' }, { src: base + 'icones/icone-512.png', sizes: '512x512', type: 'image/png' },
+        { src: base + 'icones/icone-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }] };
+    const l = document.querySelector('link[rel=manifest]'); if (l) l.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(man));
+    const t = document.querySelector('meta[name=apple-mobile-web-app-title]'); if (t) t.content = 'Minha igreja';
+  } catch (e) { /* segue sem trocar */ }
   const P = D.pessoa, IG = D.igreja, primeiro = P.nome.split(' ')[0];
   const recarregar = () => telaPortal(token);
   const acao = async (fn, args, ok) => { const { error: er } = await sb.rpc(fn, { p_token: token, ...args }); if (er) { C.toast(C.traduzErro(er)); return false; } if (ok) C.toast(ok); return true; };
@@ -133,7 +144,8 @@ export async function telaPortal(token) {
         <div class="info"><div class="nm">${esc(P.nome)}</div><dl><dt>Matrícula</dt><dd>${esc(P.matricula)}</dd><dt>Membro desde</dt><dd>${br(P.membro_desde)}</dd><dt>Ministério</dt><dd>${esc(P.ministerio || '—')}</dd><dt>Validade</dt><dd>${validade}</dd></dl></div>
         <div class="qr">${qrSvg(`${IG.nome} | ${P.nome} | ${P.matricula} | válida até ${validade}`, 3)}</div></div>`);
     }
-    if (!h) h = cartao('Bem-vindo!', '<p>Aqui você acompanha suas escalas, a agenda, os avisos da igreja e pode pedir oração.</p>');
+    h = '<div id="p-instalar"></div>' + h;
+    if (h === '<div id="p-instalar"></div>') h += cartao('Bem-vindo!', '<p>Aqui você acompanha suas escalas, a agenda, os avisos da igreja e pode pedir oração.</p>');
     return h;
   };
   const telaAgenda = () => cartao('Próximos eventos', D.agenda.length ? D.agenda.map(e => `<div class="pitem">${dataBox(e.data)}<div class="cresce"><b>${esc(e.titulo)}</b><small>${SEM[dt(e.data).getDay()]}${e.hora ? ' ' + hora(e.hora) : ''}${e.local ? ' · ' + esc(e.local) : ''}</small>${e.descricao ? `<small>${esc(e.descricao)}</small>` : ''}</div></div>`).join('') : '<div class="vazio">Nenhum evento marcado nas próximas semanas.</div>');
@@ -162,7 +174,7 @@ export async function telaPortal(token) {
       <div class="fld"><label for="pd-d">Endereço</label><input id="pd-d" maxlength="300" value="${esc(P.endereco || '')}"></div>
       <div id="pd-msg"></div><button class="btn pri" type="submit">Salvar</button></form>
       <p class="muted" style="font-size:13px;margin:12px 0 0">Seus dados são usados só pela igreja para cuidar de você (LGPD). Para pedir a exclusão, fale com a secretaria.</p>`) +
-    cartao('Dica', `<p style="margin:0">Para abrir o portal mais rápido, use a opção <b>"Adicionar à tela inicial"</b> do navegador do celular. Este link é só seu: não encaminhe para outras pessoas.</p>`);
+    cartao('Aplicativo no celular', `<div id="p-instalar-dados"></div><p class="muted" style="font-size:13px;margin:10px 0 0">Este link é só seu: não encaminhe para outras pessoas.</p>`);
 
   const desenhar = () => {
     app.innerHTML = `<div class="portal">
@@ -171,6 +183,8 @@ export async function telaPortal(token) {
       <nav class="pnav">${[['inicio', 'Início'], ['agenda', 'Agenda'], ['oracao', 'Oração'], ['dados', 'Meus dados']].map(([k, l]) => `<button class="${aba === k ? 'on' : ''}" data-aba="${k}">${l}${k === 'inicio' && D.escalas.some(s => s.status === 'pendente') ? ' <i class="ponto"></i>' : ''}</button>`).join('')}</nav>
       <main class="pcorpo">${aba === 'agenda' ? telaAgenda() : aba === 'oracao' ? telaOracao() : aba === 'dados' ? telaDados() : telaInicio()}</main></div>`;
     window.scrollTo(0, 0);
+    ligarInstalar(document.getElementById('p-instalar'));
+    ligarInstalar(document.getElementById('p-instalar-dados'), true);
     app.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => { aba = b.dataset.aba; desenhar(); });
     app.querySelectorAll('[data-esc]').forEach(b => b.onclick = () => C.ocupado(b, async () => {
       const { error: er } = await sb.rpc('responder_escala', { p_token: b.dataset.esc, p_status: b.dataset.st });

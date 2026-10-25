@@ -1,11 +1,18 @@
 {
+  "id": "/",
   "name": "Livres Connect",
   "short_name": "Livres Connect",
-  "description": "Gestão eclesiástica",
+  "description": "Gestão da igreja: pessoas, Jornada da Alma, escalas, agenda, oração e Portal do Membro.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#eef2ef",
   "theme_color": "#0d6b61",
   "lang": "pt-BR",
-  "icons": [{ "src": "icone.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icones/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
 }

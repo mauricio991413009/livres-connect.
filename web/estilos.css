@@ -453,3 +453,14 @@ input.nota.invalido{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)
 .pdisc form{margin-top:8px}
 .pcard .idcard{max-width:none}
 .whats-pri{background:#1f9d55;border-color:#1f9d55}
+
+/* ---------- Instalar como aplicativo ---------- */
+.instalar{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14.5px}
+.instalar img{border-radius:10px;flex:none}
+.instalar .titulo{display:block;margin-bottom:4px}
+.instalar ol{margin:4px 0 8px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.instalar p{margin:2px 0 8px}
+.instalar.ok{display:block}
+.ico-ios{display:inline-block;border:1px solid currentColor;border-radius:4px;padding:0 4px;font-size:12px}
+.pcorpo #p-instalar:empty{display:none}
+#instalar:empty{display:none}
