@@ -1,8 +1,10 @@
-// Livres Connect · aplicação web (fase 1: base técnica)
-// Login, verificação em duas etapas, escolha de igreja, usuários e perfis,
+// Livres Connect · aplicação web
+// Base: login, verificação em duas etapas, escolha de igreja, usuários e perfis,
 // configurações da igreja, auditoria e administração da plataforma.
+// Fase Pessoas (pessoas.js): membros, visitantes com QR Code e Jornada da Alma.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/+esm';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import * as Pessoas from './pessoas.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -49,9 +51,9 @@ const marca = `<div class="mark"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 10
 // Módulos: perfis = quem vê (null = todos); fase = quando fica pronto
 const MODULOS = [
   { k: 'painel', l: 'Painel', perfis: null },
-  { k: 'membros', l: 'Membros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'], fase: 'Pessoas' },
-  { k: 'visitantes', l: 'Visitantes', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'], fase: 'Pessoas' },
-  { k: 'jornada', l: 'Jornada da Alma', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'], fase: 'Pessoas' },
+  { k: 'membros', l: 'Membros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
+  { k: 'visitantes', l: 'Visitantes', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
+  { k: 'jornada', l: 'Jornada da Alma', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'], fase: 'Gestão' },
   { k: 'agenda', l: 'Agenda e eventos', perfis: null, fase: 'Gestão' },
   { k: 'escalas', l: 'Escalas', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'], fase: 'Gestão' },
@@ -81,6 +83,7 @@ const rota = () => {
   if (!h || h.includes('access_token') || h.includes('error')) return 'painel';
   return h.replace(/^#\/?/, '').split('?')[0] || 'painel';
 };
+const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const ir = r => { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); };
 
 function traduzErro(e) {
@@ -101,6 +104,7 @@ function traduzErro(e) {
 /* ------------------------------------------------------------------ */
 async function iniciar() {
   if (!configurado) return telaNaoConfigurado();
+  if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
   sb.auth.onAuthStateChange((evento, sessao) => {
     if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; telaNovaSenha(); return; }
     if (evento === 'SIGNED_OUT') { Object.assign(S, { user: null, vinculos: [], igrejas: [], admin: false }); telaEntrar(); }
@@ -138,7 +142,10 @@ async function carregarContexto() {
   S.igrejaId = S.igrejas.some(i => i.id === salva) ? salva : (S.igrejas[0] && S.igrejas[0].id) || null;
 }
 
-window.addEventListener('hashchange', () => { if (S.user && !S.recuperando) render(); });
+window.addEventListener('hashchange', () => {
+  if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
+  if (S.user && !S.recuperando) render();
+});
 
 /* ------------------------------------------------------------------ */
 /* telas de acesso                                                     */
@@ -295,7 +302,10 @@ function render() {
   if (!S.igrejaId) return S.admin ? ir('plataforma') : telaSemAcesso();
   if (!mod || !pode(mod.perfis)) return telaPainel(main);
   if (mod.fase) return telaEmBreve(main, mod);
-  ({ painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca })[r](main);
+  ({
+    painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
+    membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada
+  })[r](main);
 }
 
 const cab = (t, p, a = '') => `<div class="ph"><div><h1>${t}</h1>${p ? `<p>${p}</p>` : ''}</div><div class="acts">${a}</div></div>`;
@@ -314,9 +324,10 @@ async function telaPainel(main) {
   const vePessoas = pode(['pastor', 'presbiterio', 'secretaria', 'lider']);
   const veFin = pode(['pastor', 'presbiterio', 'tesouraria']);
   main.innerHTML = cab('Olá, ' + esc(S.nome.split(' ')[0]), `${esc(ig.nome)}${ig.cidade ? ' · ' + esc(ig.cidade) + (ig.uf ? '/' + esc(ig.uf) : '') : ''} · ${perf.map(p => PERFIS[p]).join(', ')}`) + '<div id="avisos"></div><div class="kpis" id="kpis"><div class="carregando">Carregando números…</div></div>' +
+    (vePessoas ? '<section class="panel" id="atencao"><div class="carregando">Carregando…</div></section>' : '') +
     `<section class="panel"><h2>Situação do projeto</h2><div class="lista">
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
-      <div class="linha"><span class="pill p-neu">semanas 6 a 9</span><span class="cresce">Membros, visitantes com QR Code e Jornada da Alma</span></div>
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Membros, visitantes com QR Code e Jornada da Alma</span></div>
       <div class="linha"><span class="pill p-neu">semanas 10 a 13</span><span class="cresce">Financeiro, agenda e escalas</span></div></div></section>`;
 
   if (pode(['pastor', 'tesouraria'])) {
@@ -340,6 +351,7 @@ async function telaPainel(main) {
     const sai = (ls || []).filter(x => x.tipo === 'saida').reduce((a, b) => a + b.valor_centavos, 0);
     kp.push(['Saldo do mês', dinheiro(ent - sai), `entradas ${dinheiro(ent)}`]);
   }
+  if (vePessoas) Pessoas.painelAtencao($('#atencao'));
   $('#kpis').innerHTML = kp.map(([l, v, s]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join('');
 }
 
@@ -609,6 +621,8 @@ document.addEventListener('click', async e => {
   if (b.dataset.acao === 'sair') { await sb.auth.signOut(); telaEntrar(); }
   if (b.dataset.acao === 'recarregar') { await aposEntrar(); }
 });
+
+Pessoas.instalar({ sb, S, $, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
 
 iniciar().catch(err => {
   console.error(err);
