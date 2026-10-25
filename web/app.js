@@ -9,6 +9,7 @@ import * as Pessoas from './pessoas.js';
 import * as Gestao from './gestao.js';
 import * as Estudos from './estudos.js';
 import * as Escola from './escola.js';
+import * as Discipulado from './discipulado.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -52,7 +53,8 @@ const TABELAS = {
   jornada_atividades: 'Atividade concluída', contatos: 'Contato', anotacoes_pastorais: 'Anotação pastoral',
   eventos: 'Evento', presencas: 'Presença', escalas: 'Escala', categorias_financeiras: 'Categoria financeira',
   campanhas: 'Campanha', lancamentos: 'Lançamento financeiro',
-  escola_turmas: 'Turma da Escola', escola_aulas: 'Aula da Escola', escola_alunos: 'Matrícula na Escola', escola_avaliacoes: 'Avaliação da Escola'
+  escola_turmas: 'Turma da Escola', escola_aulas: 'Aula da Escola', escola_alunos: 'Matrícula na Escola', escola_avaliacoes: 'Avaliação da Escola',
+  discipulados: 'Discipulado', discipulado_encontros: 'Encontro de discipulado'
 };
 const ACOES = { insert: 'criou', update: 'alterou', delete: 'excluiu' };
 
@@ -69,6 +71,7 @@ const ICONS = {
   auditoria: '<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/>',
   seguranca: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
   escola: '<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4V11M21.5 9v5"/>',
+  discipulado: '<circle cx="8" cy="7.5" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5M13.5 15.2c.9-.8 1.9-1.2 3-1.2 2.2 0 3.9 1.4 4.5 4"/>',
   estudos: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0z"/><path d="M20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/>',
   plataforma: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'
 };
@@ -82,6 +85,7 @@ const MODULOS = [
   { k: 'visitantes', l: 'Visitantes', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'jornada', l: 'Jornada da Alma', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'estudos', l: 'Estudos', perfis: null },
+  { k: 'discipulado', l: 'Discipulado', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'escola', l: 'Escola de Obreiros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'] },
   { k: 'agenda', l: 'Agenda e eventos', perfis: null },
@@ -115,6 +119,7 @@ const rota = () => {
 };
 const estudosPublico = () => { const m = location.hash.match(/^#\/estudos\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const escalaPublica = () => { const m = location.hash.match(/^#\/escala\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
+const roteiroPublico = () => { const m = location.hash.match(/^#\/discipulado\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const certificadoPublico = () => { const m = location.hash.match(/^#\/certificado\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const ir = r => { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); };
@@ -141,6 +146,7 @@ async function iniciar() {
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
   if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
+  if (roteiroPublico()) return Discipulado.telaRoteiroPublico(...roteiroPublico());
   sb.auth.onAuthStateChange((evento, sessao) => {
     if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; telaNovaSenha(); return; }
     if (evento === 'SIGNED_OUT') { Object.assign(S, { user: null, vinculos: [], igrejas: [], admin: false }); telaEntrar(); }
@@ -184,6 +190,7 @@ window.addEventListener('hashchange', () => {
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
   if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
+  if (roteiroPublico()) return Discipulado.telaRoteiroPublico(...roteiroPublico());
   if (S.user && !S.recuperando) render();
 });
 
@@ -345,7 +352,7 @@ function render() {
   ({
     painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
     membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada,
-    estudos: Estudos.telaEstudos, escola: Escola.telaEscola,
+    estudos: Estudos.telaEstudos, escola: Escola.telaEscola, discipulado: Discipulado.telaDiscipulado,
     financeiro: Gestao.telaFinanceiro, agenda: Gestao.telaAgenda, escalas: Gestao.telaEscalas
   })[r](main);
 }
@@ -371,8 +378,8 @@ async function telaPainel(main) {
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Membros, visitantes com QR Code e Jornada da Alma</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Financeiro, agenda e escalas com confirmação pelo WhatsApp</span></div>
-      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Estudos para novo convertido e Escola de Obreiros com chamada, notas e certificado</span></div>
-      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Discipulado, pedidos de oração e atendimento, comunicação e portal do membro</span></div></div></section>`;
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Estudos para novo convertido, discipulado com 8 lições e Escola de Obreiros com chamada, notas e certificado</span></div>
+      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Pedidos de oração e atendimento, comunicação e portal do membro</span></div></div></section>`;
 
   if (pode(['pastor', 'tesouraria'])) {
     const { data: f } = await sb.auth.mfa.listFactors();
@@ -668,6 +675,7 @@ document.addEventListener('click', async e => {
 
 Pessoas.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
 Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon, traduzErro, ocupado });
+Discipulado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Escola.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 
