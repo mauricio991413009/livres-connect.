@@ -164,13 +164,15 @@ export async function abrirFicha(id, depois) {
   if (comoDisc) discipulado += `<div class="estudos-ficha"><b>Discipulado</b><div class="mini-prog"><div style="width:${(comoDisc.licoes || []).length / 8 * 100}%"></div></div>
       <span>${(comoDisc.licoes || []).length} de 8 lições · com ${esc(comoDisc.discipulador)}${comoDisc.ultimo_encontro ? ' · último encontro ' + brCurta(comoDisc.ultimo_encontro) : ''}</span>${comoDisc.status === 'concluido' ? '<span class="pill p-ok">concluiu ✓</span>' : comoDisc.status === 'interrompido' ? '<span class="pill p-neu">interrompido</span>' : ''}</div>`;
   if (discipulos.length) discipulado += `<div class="estudos-ficha"><b>Discipulando</b><span style="grid-column:2/-1">${discipulos.map(d => esc(d.discipulo) + ' (' + (d.licoes || []).length + ' de 8)').join(' · ')}</span></div>`;
+  const portal = ed && ['ativo', 'afastado'].includes(p.situacao) ? await (await import('./portal.js')).blocoFicha(p) : null;
+  const botaoPortal = portal ? `<button class="btn sm" data-portal title="${esc(portal.texto || 'Enviar o link do Portal do Membro')}">${portal.situacao ? 'Portal ✓' : 'Enviar portal'}</button>` : '';
   const botaoDisc = ed && p.etapa <= 3 && !(comoDisc && comoDisc.status === 'ativo') && C.pode(['pastor', 'secretaria', 'lider']) ? '<button class="btn sm" data-discipulado>Começar discipulado</button>' : '';
 
   const md = modal(`
     <div class="mh"><div class="ficha-topo">${avatar(p, foto)}<div><h2>${esc(p.nome)}</h2><p>${etapaPill(p.etapa)} · ${dias(inicioEtapa)} dias nesta etapa · Matrícula ${matricula(p)}${p.telefone ? ' · <span class="num">' + esc(fmtTel(p.telefone)) + '</span>' : ''}</p></div></div><button class="x" data-fechar aria-label="Fechar">×</button></div>
     <div class="trilha">${C.ETAPAS.map((n, i) => `<div class="no stg ${i <= p.etapa ? 'sel' : ''}" style="--i:${i}"><span class="o">${i < p.etapa ? '✓' : i + 1}</span><span>${n}</span></div>`).join('')}</div>
     ${estudos}${discipulado}
-    ${ed ? `<div class="acts">${botaoWhats(p)}${botaoEstudos(p)}${botaoDisc}${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : `<div class="acts">${botaoWhats(p)}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>`}
+    ${ed ? `<div class="acts">${botaoWhats(p)}${botaoEstudos(p)}${botaoDisc}${botaoPortal}${p.etapa > 0 ? `<button class="btn sm" data-etapa="${p.etapa - 1}">‹ Voltar para ${C.ETAPAS[p.etapa - 1]}</button>` : ''}${p.etapa < 6 ? `<button class="btn pri sm" data-etapa="${p.etapa + 1}">Avançar para ${C.ETAPAS[p.etapa + 1]} ›</button>` : ''}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>` : `<div class="acts">${botaoWhats(p)}${p.etapa >= 4 ? '<button class="btn sm" data-cart>Carteirinha</button>' : ''}</div>`}
 
     <div class="duas">
       <section><div class="sec-t">Atividades da etapa ${C.ETAPAS[p.etapa]}</div>
@@ -223,6 +225,8 @@ export async function abrirFicha(id, depois) {
   }));
   const bd = md.querySelector('[data-discipulado]');
   if (bd) bd.onclick = async () => { const D = await import('./discipulado.js'); D.novoDiscipulado(dl || [], recarregar, id); };
+  const bp = md.querySelector('[data-portal]');
+  if (bp) bp.onclick = async () => (await import('./portal.js')).enviarPortal(p, portal.situacao, recarregar);
   const bc = md.querySelector('[data-cart]'); if (bc) bc.onclick = () => carteirinha(p, foto, () => abrirFicha(id, depois));
   md.querySelectorAll('[data-ativ]').forEach(ch => ch.onchange = async () => {
     const modelo = ch.dataset.ativ, existe = (at.data || []).find(a => a.modelo_id === modelo);
@@ -281,7 +285,7 @@ async function carteirinha(p, foto, voltar) {
   const min = (mins.find(m => m.id === p.ministerio_id) || {}).nome || '—';
   const desde = p.data_batismo || p.data_conversao || p.primeira_visita;
   const validade = '12/' + (new Date().getFullYear() + 1);
-  const md = modal(mh('Carteirinha digital', 'Mostre esta tela na recepção. A versão para o membro abrir no próprio celular chega com o Portal do Membro.') + `
+  const md = modal(mh('Carteirinha digital', 'Mostre esta tela na recepção. O membro também vê a carteirinha no Portal do Membro, no próprio celular.') + `
     <div class="idcard">
       <div class="ch">${C.esc(ig.nome)}</div>
       ${foto ? `<img class="foto" src="${C.esc(foto)}" alt="">` : `<div class="foto vazia">${C.esc(iniciais(p.nome))}</div>`}

@@ -12,6 +12,7 @@ import * as Escola from './escola.js';
 import * as Discipulado from './discipulado.js';
 import * as Cuidado from './cuidado.js';
 import * as Comunicacao from './comunicacao.js';
+import * as Portal from './portal.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -127,6 +128,7 @@ const rota = () => {
 const estudosPublico = () => { const m = location.hash.match(/^#\/estudos\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const escalaPublica = () => { const m = location.hash.match(/^#\/escala\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const roteiroPublico = () => { const m = location.hash.match(/^#\/discipulado\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
+const portalMembro = () => { const m = location.hash.match(/^#\/membro\/([0-9a-f]{64})/i); return m ? m[1].toLowerCase() : null; };
 const oracaoPublica = () => { const m = location.hash.match(/^#\/oracao\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const certificadoPublico = () => { const m = location.hash.match(/^#\/certificado\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
@@ -156,6 +158,7 @@ async function iniciar() {
   if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
   if (roteiroPublico()) return Discipulado.telaRoteiroPublico(...roteiroPublico());
   if (oracaoPublica()) return Cuidado.telaOracaoPublica(oracaoPublica());
+  if (portalMembro()) return Portal.telaPortal(portalMembro());
   sb.auth.onAuthStateChange((evento, sessao) => {
     if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; telaNovaSenha(); return; }
     if (evento === 'SIGNED_OUT') { Object.assign(S, { user: null, vinculos: [], igrejas: [], admin: false }); telaEntrar(); }
@@ -201,6 +204,7 @@ window.addEventListener('hashchange', () => {
   if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
   if (roteiroPublico()) return Discipulado.telaRoteiroPublico(...roteiroPublico());
   if (oracaoPublica()) return Cuidado.telaOracaoPublica(oracaoPublica());
+  if (portalMembro()) return Portal.telaPortal(portalMembro());
   if (S.user && !S.recuperando) render();
 });
 
@@ -230,7 +234,8 @@ function telaEntrar(aviso = '') {
       <div id="msg"></div>
       <button class="btn pri full" type="submit">Entrar</button>
     </form>
-    <div class="auth-links"><button data-ir="criar">Criar minha conta</button><button data-ir="recuperar">Esqueci a senha</button></div>`);
+    <div class="auth-links"><button data-ir="criar">Criar minha conta</button><button data-ir="recuperar">Esqueci a senha</button></div>
+    ${Portal.tokenGuardado() ? `<a class="btn full" href="#/membro/${esc(Portal.tokenGuardado())}">Abrir meu Portal do Membro</a>` : '<p class="muted" style="font-size:13px;margin:0">Membro da igreja? Peça à secretaria o link do seu Portal do Membro.</p>'}`);
   $('#f-entrar').onsubmit = e => {
     e.preventDefault();
     ocupado($('button[type=submit]', e.target), async () => {
@@ -391,7 +396,8 @@ async function telaPainel(main) {
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Estudos para novo convertido, discipulado com 8 lições e Escola de Obreiros com chamada, notas e certificado</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Pedidos de oração e atendimento pastoral com QR Code</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Comunicação pelo WhatsApp com lista de envio e aniversariantes</span></div>
-      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Portal do membro</span></div></div></section>`;
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Portal do Membro no celular, com link pessoal sem senha</span></div>
+      <div class="linha"><span class="pill p-neu">etapa 3</span><span class="cresce">Relatórios avançados, automações e recursos de inteligência artificial</span></div></div></section>`;
 
   if (pode(['pastor', 'tesouraria'])) {
     const { data: f } = await sb.auth.mfa.listFactors();
@@ -698,6 +704,8 @@ Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon, traduzErro, ocupad
 Discipulado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Cuidado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado });
 Comunicacao.instalar({ sb, S, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado });
+Portal.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
+Comunicacao.registrarPortal(Portal);
 Escola.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 

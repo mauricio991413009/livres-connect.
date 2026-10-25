@@ -20,6 +20,7 @@ psql -d "$DB" -q -v ON_ERROR_STOP=1 \
   -f ../migrations/0012_discipulado.sql \
   -f ../migrations/0013_oracao_atendimento.sql \
   -f ../migrations/0014_comunicacao.sql \
+  -f ../migrations/0015_portal_membro.sql \
   -f teste_isolamento.sql \
   -f teste_pessoas.sql \
   -f teste_gestao.sql \
@@ -28,4 +29,5 @@ psql -d "$DB" -q -v ON_ERROR_STOP=1 \
   -f teste_escola.sql \
   -f teste_discipulado.sql \
   -f teste_oracao.sql \
-  -f teste_comunicacao.sql | grep -E "FALHOU|aprovados|^ +[0-9]+ +\|" 
+  -f teste_comunicacao.sql \
+  -f teste_portal.sql | grep -E "FALHOU|aprovados|^ +[0-9]+ +\|" 

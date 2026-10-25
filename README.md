@@ -1,10 +1,10 @@
 # Livres Connect
 
-Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jornada da Alma, financeiro, agenda e escalas.
+Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jornada da Alma, financeiro, agenda, escalas, Escola de Obreiros, discipulado, oração, comunicação e Portal do Membro.
 
 **No ar:** https://livres-connect.vercel.app
 
-**Situação atual: 1ª etapa completa (Base técnica, Pessoas e Gestão).**
+**Situação atual: 1ª e 2ª etapas completas.** A 3ª etapa (relatórios avançados, automações e inteligência artificial) ainda não começou.
 
 - **Base:** login com verificação em duas etapas, várias igrejas com dados isolados, perfis de acesso, convites, configurações da igreja e auditoria.
 - **Pessoas:** membros com foto e carteirinha digital, visitantes com ficha pública por QR Code (encaminhada automaticamente a um líder), Jornada da Alma em quadro com atividades por etapa, histórico de contatos e anotações pastorais restritas.
@@ -13,6 +13,7 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 - **Discipulado:** um membro acompanha cada novo convertido por 8 lições. A equipe registra cada encontro e a lição estudada, vê quem está parado há mais de duas semanas e envia ao discipulador o roteiro público das lições (sem login, com apostila para imprimir). Começar leva o novo convertido para a etapa Discipulado; concluir as 8 lições marca a Jornada.
 - **Oração e atendimento:** QR Code onde qualquer pessoa pede oração (escolhendo se só os pastores leem, se a equipe de intercessão também, ou se pode ir para o mural) ou pede para conversar com um pastor. A equipe ora ("Orei"), registra testemunhos e o pastor agenda o atendimento e avisa pelo WhatsApp. Mensagens de atendimento ficam só com o pastor, a pastora e quem foi designado.
 - **Comunicação:** comunicados para membros, novos convertidos, visitantes, quem serve ou um ministério. Cada pessoa recebe pelo WhatsApp com o próprio nome, e o sistema marca quem já recebeu. Texto pronto para grupos, aniversariantes da semana (nascimento e casamento) e modelos de mensagem. Quem lidera um ministério envia para o próprio ministério.
+- **Portal do Membro:** cada membro recebe pelo WhatsApp um link só dele, sem senha (gerar um link novo invalida o anterior). No celular ele vê a carteirinha, confirma as escalas, acompanha a agenda e os avisos, pede oração, ora pelos pedidos do mural, pede conversa com o pastor, atualiza os próprios dados, vê a Escola de Obreiros (frequência, média e certificado) e o discipulado; o discipulador registra os encontros por ali. O envio dos links fica na ficha da pessoa e em Comunicação.
 - **Perfis:** pastor presidente, pastora, presbitério, tesouraria, secretaria, líder, obreiro, missionário, evangelista e diácono.
 - **Gestão:** financeiro (lançamentos, contas a pagar e receber, comprovantes, campanhas, planilha e relatório para imprimir), agenda com eventos semanais e escalas com lembrete pelo WhatsApp e confirmação do voluntário por link, sem login.
 
@@ -135,7 +136,8 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0012_discipulado.sql` | Discipulado: discipulador e discípulo, encontros com a lição estudada (`discipulados_lista`, `discipuladores_possiveis`) |
 | `supabase/migrations/0013_oracao_atendimento.sql` | Pedidos de oração e atendimento pastoral, com página pública (`registrar_pedido_oracao`, `solicitar_atendimento`, `orar_por`); a auditoria deixa de fora os textos sigilosos |
 | `supabase/migrations/0014_comunicacao.sql` | Comunicados por público e lista de envio pelo WhatsApp (`comunicado_destinatarios`, `comunicado_marcar`, `comunicados_resumo`) |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (206 verificações) |
+| `supabase/migrations/0015_portal_membro.sql` | Portal do Membro com link pessoal sem senha: só a impressão digital SHA-256 do código fica no banco (`portal_gerar_link`, `portal_dados` e ações do portal) |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (232 verificações) |
 | `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estudos.js` e `estudos-conteudo.js` (estudos para novo convertido; o texto das lições fica no segundo arquivo), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 
