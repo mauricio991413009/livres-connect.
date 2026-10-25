@@ -9,6 +9,7 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 - **Base:** login com verificação em duas etapas, várias igrejas com dados isolados, perfis de acesso, convites, configurações da igreja e auditoria.
 - **Pessoas:** membros com foto e carteirinha digital, visitantes com ficha pública por QR Code (encaminhada automaticamente a um líder), Jornada da Alma em quadro com atividades por etapa, histórico de contatos e anotações pastorais restritas.
 - **Estudos para novo convertido:** 10 lições bíblicas com página pública aberta por QR Code (sem login). O aluno coloca nome e WhatsApp; cada estudo concluído fica registrado e aparece para a equipe (aba Estudos e ficha da pessoa). Quem não estava cadastrado entra como Novo convertido com um responsável. Apostila para imprimir e botão "Enviar estudos" na ficha.
+- **Escola de Obreiros:** turmas com professor responsável, matrícula de membros, aulas com chamada, avaliações com peso e notas, frequência e média automáticas, fechamento do resultado e certificado para imprimir com QR Code de verificação. O professor faz tudo pelo próprio acesso; matrícula e aprovação marcam a Jornada da Alma.
 - **Perfis:** pastor presidente, pastora, presbitério, tesouraria, secretaria, líder, obreiro, missionário, evangelista e diácono.
 - **Gestão:** financeiro (lançamentos, contas a pagar e receber, comprovantes, campanhas, planilha e relatório para imprimir), agenda com eventos semanais e escalas com lembrete pelo WhatsApp e confirmação do voluntário por link, sem login.
 
@@ -127,7 +128,8 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0008_perfis_e_ministerios.sql` | Permissões dos novos perfis (`tem_perfil`, `lidera_ministerio`) e ministérios de células, jovens, casais, homens e mulheres |
 | `supabase/migrations/0009_search_path.sql` | Ajuste de segurança em duas funções auxiliares |
 | `supabase/migrations/0010_estudos_alunos.sql` | Alunos dos estudos e lições concluídas (`estudos_iniciar`, `estudos_concluir`, `estudos_progresso`) |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (119 verificações) |
+| `supabase/migrations/0011_escola_obreiros.sql` | Escola de Obreiros: turmas, aulas e chamada, avaliações e notas, certificado com verificação pública (`certificado_publico`) |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (146 verificações) |
 | `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estudos.js` e `estudos-conteudo.js` (estudos para novo convertido; o texto das lições fica no segundo arquivo), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 

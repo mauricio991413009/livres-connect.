@@ -8,6 +8,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import * as Pessoas from './pessoas.js';
 import * as Gestao from './gestao.js';
 import * as Estudos from './estudos.js';
+import * as Escola from './escola.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -50,7 +51,8 @@ const TABELAS = {
   pessoas: 'Pessoa', jornada_etapas: 'Jornada da Alma', jornada_atividades_modelo: 'Atividade da Jornada',
   jornada_atividades: 'Atividade concluída', contatos: 'Contato', anotacoes_pastorais: 'Anotação pastoral',
   eventos: 'Evento', presencas: 'Presença', escalas: 'Escala', categorias_financeiras: 'Categoria financeira',
-  campanhas: 'Campanha', lancamentos: 'Lançamento financeiro'
+  campanhas: 'Campanha', lancamentos: 'Lançamento financeiro',
+  escola_turmas: 'Turma da Escola', escola_aulas: 'Aula da Escola', escola_alunos: 'Matrícula na Escola', escola_avaliacoes: 'Avaliação da Escola'
 };
 const ACOES = { insert: 'criou', update: 'alterou', delete: 'excluiu' };
 
@@ -66,6 +68,7 @@ const ICONS = {
   igreja: '<path d="M12 3v5M9.5 5.5h5M5 21V12l7-4 7 4v9M10 21v-4h4v4"/>',
   auditoria: '<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/>',
   seguranca: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  escola: '<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4V11M21.5 9v5"/>',
   estudos: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0z"/><path d="M20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/>',
   plataforma: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'
 };
@@ -79,6 +82,7 @@ const MODULOS = [
   { k: 'visitantes', l: 'Visitantes', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'jornada', l: 'Jornada da Alma', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'estudos', l: 'Estudos', perfis: null },
+  { k: 'escola', l: 'Escola de Obreiros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'] },
   { k: 'agenda', l: 'Agenda e eventos', perfis: null },
   { k: 'escalas', l: 'Escalas', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'] },
@@ -107,10 +111,11 @@ const igrejaAtual = () => S.igrejas.find(i => i.id === S.igrejaId);
 const rota = () => {
   const h = location.hash;
   if (!h || h.includes('access_token') || h.includes('error')) return 'painel';
-  return h.replace(/^#\/?/, '').split('?')[0] || 'painel';
+  return h.replace(/^#\/?/, '').split(/[?/]/)[0] || 'painel';
 };
 const estudosPublico = () => { const m = location.hash.match(/^#\/estudos\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const escalaPublica = () => { const m = location.hash.match(/^#\/escala\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
+const certificadoPublico = () => { const m = location.hash.match(/^#\/certificado\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const ir = r => { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); };
 
@@ -135,6 +140,7 @@ async function iniciar() {
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
+  if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
   sb.auth.onAuthStateChange((evento, sessao) => {
     if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; telaNovaSenha(); return; }
     if (evento === 'SIGNED_OUT') { Object.assign(S, { user: null, vinculos: [], igrejas: [], admin: false }); telaEntrar(); }
@@ -177,6 +183,7 @@ window.addEventListener('hashchange', () => {
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
+  if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
   if (S.user && !S.recuperando) render();
 });
 
@@ -338,7 +345,7 @@ function render() {
   ({
     painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
     membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada,
-    estudos: Estudos.telaEstudos,
+    estudos: Estudos.telaEstudos, escola: Escola.telaEscola,
     financeiro: Gestao.telaFinanceiro, agenda: Gestao.telaAgenda, escalas: Gestao.telaEscalas
   })[r](main);
 }
@@ -364,7 +371,8 @@ async function telaPainel(main) {
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Membros, visitantes com QR Code e Jornada da Alma</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Financeiro, agenda e escalas com confirmação pelo WhatsApp</span></div>
-      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Escola de Obreiros, discipulado, comunicação e portal do membro</span></div></div></section>`;
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Estudos para novo convertido e Escola de Obreiros com chamada, notas e certificado</span></div>
+      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Discipulado, pedidos de oração e atendimento, comunicação e portal do membro</span></div></div></section>`;
 
   if (pode(['pastor', 'tesouraria'])) {
     const { data: f } = await sb.auth.mfa.listFactors();
@@ -660,6 +668,7 @@ document.addEventListener('click', async e => {
 
 Pessoas.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
 Estudos.instalar({ sb, S, esc, toast, igrejaAtual, cab, icon, traduzErro, ocupado });
+Escola.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 
 iniciar().catch(err => {
