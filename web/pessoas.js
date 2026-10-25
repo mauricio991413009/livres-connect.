@@ -474,3 +474,6 @@ export async function telaFichaPublica(igrejaId) {
   };
   formulario();
 }
+
+// Ferramentas compartilhadas com a fase Gestão (gestao.js)
+export { modal, fecharModal, mh, $v, erroEm, hoje, br, brCurta, linkWhats, fmtTel, ministerios, qrSvg };

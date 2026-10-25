@@ -4,11 +4,11 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 
 **No ar:** https://livres-connect.vercel.app
 
-**Situação atual: fases Base técnica e Pessoas concluídas.**
+**Situação atual: 1ª etapa completa (Base técnica, Pessoas e Gestão).**
 
 - **Base:** login com verificação em duas etapas, várias igrejas com dados isolados, perfis de acesso, convites, configurações da igreja e auditoria.
 - **Pessoas:** membros com foto e carteirinha digital, visitantes com ficha pública por QR Code (encaminhada automaticamente a um líder), Jornada da Alma em quadro com atividades por etapa, histórico de contatos e anotações pastorais restritas.
-- **Em breve (fase Gestão):** Financeiro, Agenda e Escalas. As tabelas e regras de acesso já estão no banco.
+- **Gestão:** financeiro (lançamentos, contas a pagar e receber, comprovantes, campanhas, planilha e relatório para imprimir), agenda com eventos semanais e escalas com lembrete pelo WhatsApp e confirmação do voluntário por link, sem login.
 
 ---
 
@@ -119,8 +119,10 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0002_restringir_funcoes.sql` | Fecha as funções internas para a API pública |
 | `supabase/migrations/0003_fase_pessoas.sql` | Ficha pública do visitante (`registrar_visitante`), `mudar_etapa`, `equipe_acompanhamento` |
 | `supabase/migrations/0004_fotos.sql` | Pasta privada de fotos no Storage, separada por igreja |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (63 verificações) |
-| `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `estilos.css`, `config.js` |
+| `supabase/migrations/0005_fase_gestao.sql` | Forma de pagamento, séries de eventos, escala com link (`escala_do_evento`, `voluntarios`, `escala_publica`, `responder_escala`) |
+| `supabase/migrations/0006_comprovantes.sql` | Pasta privada de comprovantes financeiros |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (81 verificações) |
+| `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 
 **Decisões**
@@ -142,5 +144,5 @@ PGHOST=localhost PGUSER=postgres ./rodar_testes.sh
 **Próximas fases**
 
 1. ~~**Pessoas**: membros, ficha pública por QR Code, Jornada da Alma, carteirinha~~ (concluída)
-2. **Gestão** (semanas 10 a 13): financeiro com comprovantes no Supabase Storage, agenda, escalas com lembretes por e-mail
+2. ~~**Gestão**: financeiro com comprovantes, agenda, escalas com lembretes~~ (concluída)
 3. **Piloto** (semanas 14 a 16): SMTP próprio, backup, treinamento e ajustes

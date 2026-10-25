@@ -2,9 +2,11 @@
 // Base: login, verificação em duas etapas, escolha de igreja, usuários e perfis,
 // configurações da igreja, auditoria e administração da plataforma.
 // Fase Pessoas (pessoas.js): membros, visitantes com QR Code e Jornada da Alma.
+// Fase Gestão (gestao.js): financeiro, agenda e escalas.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/+esm';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import * as Pessoas from './pessoas.js';
+import * as Gestao from './gestao.js';
 
 /* ------------------------------------------------------------------ */
 /* utilidades                                                          */
@@ -54,9 +56,9 @@ const MODULOS = [
   { k: 'membros', l: 'Membros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'visitantes', l: 'Visitantes', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'jornada', l: 'Jornada da Alma', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
-  { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'], fase: 'Gestão' },
-  { k: 'agenda', l: 'Agenda e eventos', perfis: null, fase: 'Gestão' },
-  { k: 'escalas', l: 'Escalas', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'], fase: 'Gestão' },
+  { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'] },
+  { k: 'agenda', l: 'Agenda e eventos', perfis: null },
+  { k: 'escalas', l: 'Escalas', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'] },
   { sep: true },
   { k: 'usuarios', l: 'Usuários e perfis', perfis: ['pastor'] },
   { k: 'igreja', l: 'Configurações da igreja', perfis: ['pastor'] },
@@ -83,6 +85,7 @@ const rota = () => {
   if (!h || h.includes('access_token') || h.includes('error')) return 'painel';
   return h.replace(/^#\/?/, '').split('?')[0] || 'painel';
 };
+const escalaPublica = () => { const m = location.hash.match(/^#\/escala\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const ir = r => { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); };
 
@@ -105,6 +108,7 @@ function traduzErro(e) {
 async function iniciar() {
   if (!configurado) return telaNaoConfigurado();
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
+  if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   sb.auth.onAuthStateChange((evento, sessao) => {
     if (evento === 'PASSWORD_RECOVERY') { S.recuperando = true; telaNovaSenha(); return; }
     if (evento === 'SIGNED_OUT') { Object.assign(S, { user: null, vinculos: [], igrejas: [], admin: false }); telaEntrar(); }
@@ -144,6 +148,7 @@ async function carregarContexto() {
 
 window.addEventListener('hashchange', () => {
   if (fichaPublica()) return Pessoas.telaFichaPublica(fichaPublica());
+  if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (S.user && !S.recuperando) render();
 });
 
@@ -304,7 +309,8 @@ function render() {
   if (mod.fase) return telaEmBreve(main, mod);
   ({
     painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
-    membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada
+    membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada,
+    financeiro: Gestao.telaFinanceiro, agenda: Gestao.telaAgenda, escalas: Gestao.telaEscalas
   })[r](main);
 }
 
@@ -328,7 +334,8 @@ async function telaPainel(main) {
     `<section class="panel"><h2>Situação do projeto</h2><div class="lista">
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Membros, visitantes com QR Code e Jornada da Alma</span></div>
-      <div class="linha"><span class="pill p-neu">semanas 10 a 13</span><span class="cresce">Financeiro, agenda e escalas</span></div></div></section>`;
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Financeiro, agenda e escalas com confirmação pelo WhatsApp</span></div>
+      <div class="linha"><span class="pill p-neu">etapa 2</span><span class="cresce">Escola de Obreiros, discipulado, comunicação e portal do membro</span></div></div></section>`;
 
   if (pode(['pastor', 'tesouraria'])) {
     const { data: f } = await sb.auth.mfa.listFactors();
@@ -623,6 +630,7 @@ document.addEventListener('click', async e => {
 });
 
 Pessoas.instalar({ sb, S, $, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS, render });
+Gestao.instalar({ sb, S, $, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 
 iniciar().catch(err => {
   console.error(err);
