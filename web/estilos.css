@@ -538,3 +538,9 @@ ol.dias b{color:var(--accent);margin-right:6px;font-size:13px}
 .auto-dias{display:flex;align-items:center;gap:6px}
 .auto-dias input{width:76px}
 @media (max-width:600px){.tarefa .tar-acoes{width:100%}}
+.caixa.abertura{background:#e7f0f8;color:var(--fg)}
+.caixa.abertura .rotulo{color:#1f6fa8}
+.caixa.dica-disc{background:var(--surface-2);border:1px dashed var(--line)}
+.caixa.dica-disc .rotulo{color:var(--gold)}
+@media (prefers-color-scheme:dark){.caixa.abertura{background:#1b2a36}}
+@media print{.caixa.abertura{background:#fff!important;border:1px solid #999}}

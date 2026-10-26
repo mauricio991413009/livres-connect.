@@ -1,7 +1,7 @@
 // Livres Connect · Discipulado
 // Aba interna (discipulados em andamento, encontros, lições) e roteiro
 // público das 8 lições para o discipulador, em #/discipulado/<igreja>.
-import { LICOES } from './discipulado-conteudo.js';
+import { LICOES, ROTEIRO_ENCONTRO } from './discipulado-conteudo.js';
 import { modal, fecharModal, mh, $v, erroEm, hoje, br, brCurta, linkWhats, fmtTel, abrirFicha } from './pessoas.js';
 
 let C;
@@ -21,12 +21,18 @@ export const blocoLicao = (l, i, esc) => `
     <h1>${esc(l.titulo)}</h1>
     <p class="estudo-resumo">${esc(l.objetivo)}</p>
     <div class="caixa leia"><span class="rotulo">Leiam juntos</span><b>${esc(l.leitura)}</b></div>
+    ${l.abertura ? `<div class="caixa abertura"><span class="rotulo">Para começar a conversa</span>${esc(l.abertura)}</div>` : ''}
     <h2>Para conversar</h2>
     <ol class="pontos">${l.pontos.map(([t, txt, ref]) => `<li><h3>${esc(t)}</h3><p>${esc(txt)}</p><span class="ref">${esc(ref)}</span></li>`).join('')}</ol>
+    ${(l.aprofundar || []).length ? `<h2>Para entender melhor</h2>${l.aprofundar.map(p => `<p>${esc(p)}</p>`).join('')}` : ''}
+    ${(l.duvidas || []).length ? `<h2>Dúvidas comuns</h2><div class="duvidas">${l.duvidas.map(([q, r]) => `<details><summary>${esc(q)}</summary><p>${esc(r)}</p></details>`).join('')}</div>` : ''}
     <h2>Perguntas</h2>
     <ol class="perguntas">${l.perguntas.map(q => `<li>${esc(q)}</li>`).join('')}</ol>
+    ${l.memorizar ? `<div class="caixa memorizar"><span class="rotulo">Versículo para decorar</span><b>${esc(l.memorizar)}</b> · leiam na Bíblia e repitam juntos até decorar.</div>` : ''}
     <div class="caixa desafio"><span class="rotulo">Prática da semana</span>${esc(l.pratica)}</div>
-    <div class="caixa memorizar"><span class="rotulo">Dica para o discipulador</span>${esc(l.dica)}</div>
+    ${l.oracao ? `<div class="caixa oracao"><span class="rotulo">Oração</span>${esc(l.oracao)}</div>` : ''}
+    ${(l.semana || []).length ? `<div class="caixa semana"><span class="rotulo">Leitura da semana</span><ol class="dias">${l.semana.map((r, d) => `<li><b>Dia ${d + 1}</b> ${esc(r)}</li>`).join('')}</ol></div>` : ''}
+    <div class="caixa dica-disc"><span class="rotulo">Orientações ao discipulador</span>${esc(l.dica)}</div>
   </article>`;
 
 const progresso = (licoes, cls = '') => `<div class="licoes ${cls}" title="${licoes.length} de ${LICOES.length} lições">${LICOES.map((_, i) => `<i class="${licoes.includes(i + 1) ? 'd' : ''}">${i + 1}</i>`).join('')}</div>`;
@@ -190,6 +196,8 @@ export async function telaRoteiroPublico(ig, qual) {
     app.innerHTML = `<div class="leitura">${topo}
       <section class="estudo capa"><h1>Roteiro do discipulado</h1>
         <p>Obrigado por acompanhar alguém nos primeiros passos com Jesus! São 8 lições, uma por semana. Em cada encontro: leiam o texto juntos, conversem sobre os pontos, façam as perguntas com calma e terminem orando.</p>
+        <h2>Como conduzir cada encontro (cerca de 1 hora)</h2>
+        <ol class="pontos">${ROTEIRO_ENCONTRO.map(([t, txt]) => `<li><h3>${esc(t)}</h3><p>${esc(txt)}</p></li>`).join('')}</ol>
         <p class="muted" style="font-size:14px">Depois de cada encontro, avise quem acompanha vocês na igreja (ou registre pelo Portal do Membro) para o progresso ficar anotado.</p></section>
       <ol class="lista-estudos">${LICOES.map((l, i) => `<li><a href="#/discipulado/${ig}/${i + 1}"><span class="num-estudo">${i + 1}</span><span class="cresce"><b>${esc(l.titulo)}</b><small>${esc(l.objetivo)}</small></span><span class="seta">›</span></a></li>`).join('')}</ol>
       <p class="muted nao-imprime" style="text-align:center;font-size:13px;margin:18px 0 0"><a href="#/discipulado/${ig}/todos">Ver todas as lições em uma página</a></p></div>`;
