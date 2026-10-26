@@ -544,3 +544,10 @@ ol.dias b{color:var(--accent);margin-right:6px;font-size:13px}
 .caixa.dica-disc .rotulo{color:var(--gold)}
 @media (prefers-color-scheme:dark){.caixa.abertura{background:#1b2a36}}
 @media print{.caixa.abertura{background:#fff!important;border:1px solid #999}}
+
+.nav-item .badge{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#c0392b;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.nav-item .badge[hidden]{display:none}
+.nav-item .badge+.tag{margin-left:8px}
+.avisos-equipe{margin-bottom:12px;line-height:1.7}
+.avisos-equipe a{color:inherit;text-decoration:underline}
+@media (max-width:760px){.nav-item .badge{margin-left:6px}}

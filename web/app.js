@@ -356,7 +356,7 @@ function render() {
   const mods = MODULOS.filter(m => m.sep || pode(m.perfis));
   const ig = igrejaAtual();
   const nav = mods.map(m => m.sep ? '<div class="nav-sep"></div>' :
-    `<a class="nav-item ${r === m.k ? 'on' : ''}" href="#/${m.k}" ${r === m.k ? 'aria-current="page"' : ''}>${icon(m.k)}<span>${m.l}</span>${m.fase ? '<span class="tag">em breve</span>' : ''}</a>`).join('')
+    `<a class="nav-item ${r === m.k ? 'on' : ''}" href="#/${m.k}" ${r === m.k ? 'aria-current="page"' : ''}>${icon(m.k)}<span>${m.l}</span>${m.fase ? '<span class="tag">em breve</span>' : ''}<span class="badge" data-badge="${m.k}" hidden></span></a>`).join('')
     + (S.admin ? `<div class="nav-sep"></div><a class="nav-item ${r === 'plataforma' ? 'on' : ''}" href="#/plataforma">${icon('plataforma')}<span>Plataforma</span></a>` : '');
 
   app().innerHTML = `
@@ -367,6 +367,7 @@ function render() {
     </header>
     <div class="app"><nav aria-label="Módulos">${nav}</nav><main id="main"><div class="wrap"><div class="carregando">Carregando…</div></div></main></div>`;
 
+  atualizarAvisos();
   const sel = $('#sel-igreja');
   if (sel) sel.onchange = () => { S.igrejaId = sel.value; guardar('lc-igreja', sel.value); render(); toast('Agora você está em ' + igrejaAtual().nome + '.'); };
 
@@ -385,6 +386,43 @@ function render() {
   })[r](main);
 }
 
+/* ------------------------------------------------------------------ */
+/* avisos da equipe: contadores no menu e faixa no Painel              */
+/* (a segurança é a do banco: cada pessoa só conta o que já pode ver)  */
+/* ------------------------------------------------------------------ */
+async function contarAvisos() {
+  if (!sb || !S.igrejaId) return null;
+  const id = S.igrejaId, A = { oracao: 0, atend: 0, cadastros: 0 };
+  const cont = q => q.then(r => (r && !r.error && r.count) || 0, () => 0);
+  const tarefas = [];
+  if (pode(['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'])) {
+    tarefas.push(cont(sb.from('pedidos_oracao').select('id', { count: 'exact', head: true }).eq('igreja_id', id).eq('status', 'aberto').eq('oracoes', 0)).then(n => A.oracao = n));
+    tarefas.push(cont(sb.from('atendimentos').select('id', { count: 'exact', head: true }).eq('igreja_id', id).eq('status', 'pendente')).then(n => A.atend = n));
+  }
+  if (pode(['pastor', 'presbiterio', 'secretaria'])) {
+    tarefas.push(cont(sb.from('pessoas').select('id', { count: 'exact', head: true }).eq('igreja_id', id).eq('situacao', 'ativo').is('responsavel_id', null).in('origem', ['qr', 'estudos'])).then(n => A.cadastros = n));
+  }
+  await Promise.all(tarefas);
+  return A;
+}
+async function atualizarAvisos() {
+  const A = await contarAvisos(); if (!A) return;
+  S.avisos = A;
+  const marca = (k, n) => document.querySelectorAll(`[data-badge="${k}"]`).forEach(b => { b.textContent = n > 99 ? '99+' : n; b.hidden = !n; b.setAttribute('aria-label', n + ' pendente' + (n === 1 ? '' : 's')); });
+  marca('cuidado', A.oracao + A.atend);
+  marca('visitantes', A.cadastros);
+  const fx = document.getElementById('avisos-equipe');
+  if (fx) {
+    const it = [];
+    if (A.oracao) it.push(`<a href="#/cuidado"><b>${A.oracao}</b> pedido${A.oracao === 1 ? '' : 's'} de oração ainda sem oração</a>`);
+    if (A.atend) it.push(`<a href="#/cuidado"><b>${A.atend}</b> pessoa${A.atend === 1 ? '' : 's'} querendo conversar com um pastor</a>`);
+    if (A.cadastros) it.push(`<a href="#/visitantes"><b>${A.cadastros}</b> cadastro${A.cadastros === 1 ? '' : 's'} novo${A.cadastros === 1 ? '' : 's'} sem responsável</a>`);
+    fx.innerHTML = it.length ? `<div class="aviso ouro avisos-equipe"><b>Precisa da sua atenção:</b> ${it.join(' · ')}</div>` : '';
+  }
+}
+setInterval(() => { if (S.user && S.igrejaId && !document.hidden) atualizarAvisos(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.user && S.igrejaId) atualizarAvisos(); });
+
 const cab = (t, p, a = '') => `<div class="ph"><div><h1>${t}</h1>${p ? `<p>${p}</p>` : ''}</div><div class="acts">${a}</div></div>`;
 
 function telaEmBreve(main, m) {
@@ -400,7 +438,7 @@ async function telaPainel(main) {
   const hoje = new Date(), mesIni = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
   const vePessoas = pode(['pastor', 'presbiterio', 'secretaria', 'lider']);
   const veFin = pode(['pastor', 'presbiterio', 'tesouraria']);
-  main.innerHTML = cab('Olá, ' + esc(S.nome.split(' ')[0]), `${esc(ig.nome)}${ig.cidade ? ' · ' + esc(ig.cidade) + (ig.uf ? '/' + esc(ig.uf) : '') : ''} · ${perf.map(p => PERFIS[p]).join(', ')}`) + '<div id="avisos"></div><div id="instalar"></div><div class="kpis" id="kpis"><div class="carregando">Carregando números…</div></div>' +
+  main.innerHTML = cab('Olá, ' + esc(S.nome.split(' ')[0]), `${esc(ig.nome)}${ig.cidade ? ' · ' + esc(ig.cidade) + (ig.uf ? '/' + esc(ig.uf) : '') : ''} · ${perf.map(p => PERFIS[p]).join(', ')}`) + '<div id="avisos"></div><div id="avisos-equipe"></div><div id="instalar"></div><div class="kpis" id="kpis"><div class="carregando">Carregando números…</div></div>' +
     '<section class="panel" id="tarefas-dia"><div class="carregando">Carregando suas tarefas…</div></section>' +
     `<section class="panel"><h2>Situação do projeto</h2><div class="lista">
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
