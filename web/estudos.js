@@ -129,10 +129,14 @@ export async function telaEstudosPublico(ig, qual) {
       ${e.intro.map(p => `<p>${esc(p)}</p>`).join('')}
       <h2>O que a Bíblia ensina</h2>
       <ol class="pontos">${e.pontos.map(([t, txt, ref]) => `<li><h3>${esc(t)}</h3><p>${esc(txt)}</p><span class="ref">${esc(ref)}</span></li>`).join('')}</ol>
+      ${(e.aprofundar || []).length ? `<h2>Para entender melhor</h2>${e.aprofundar.map(p => `<p>${esc(p)}</p>`).join('')}` : ''}
+      ${(e.duvidas || []).length ? `<h2>Dúvidas comuns</h2><div class="duvidas">${e.duvidas.map(([q, r]) => `<details><summary>${esc(q)}</summary><p>${esc(r)}</p></details>`).join('')}</div>` : ''}
       <h2>Para pensar e conversar</h2>
       <ol class="perguntas">${e.perguntas.map(q => `<li>${esc(q)}</li>`).join('')}</ol>
       <div class="caixa desafio"><span class="rotulo">Desafio da semana</span>${esc(e.desafio)}</div>
+      ${e.oracao ? `<div class="caixa oracao"><span class="rotulo">Oração</span>${esc(e.oracao)}</div>` : ''}
       <div class="caixa memorizar"><span class="rotulo">Versículo para memorizar</span><b>${esc(e.memorizar)}</b><span>Procure na sua Bíblia, copie num cartão e leia todos os dias até saber de cor.</span></div>
+      ${(e.semana || []).length ? `<div class="caixa semana"><span class="rotulo">Leitura da semana</span><ol class="dias">${e.semana.map((r, d) => `<li><b>Dia ${d + 1}</b> ${esc(r)}</li>`).join('')}</ol></div>` : ''}
       ${sozinho ? `<div id="concluir" class="nao-imprime"></div>
         <nav class="estudo-nav nao-imprime">${i > 0 ? `<a class="btn" href="#/estudos/${ig}/${i}">‹ Anterior</a>` : '<span></span>'}
           <a class="btn ghost" href="#/estudos/${ig}">Todos os estudos</a>

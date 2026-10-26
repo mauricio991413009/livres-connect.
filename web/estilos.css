@@ -464,3 +464,22 @@ input.nota.invalido{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)
 .ico-ios{display:inline-block;border:1px solid currentColor;border-radius:4px;padding:0 4px;font-size:12px}
 .pcorpo #p-instalar:empty{display:none}
 #instalar:empty{display:none}
+
+/* ---------- Estudos aprofundados e apostila ---------- */
+.caixa.oracao{background:#efe8f6;color:var(--fg);font-style:italic}
+.caixa.oracao .rotulo{color:#6b3f8a;font-style:normal}
+.caixa.semana{background:var(--surface-2);border:1px solid var(--line)}
+.caixa.semana .rotulo{color:var(--accent)}
+ol.dias{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;font-size:15px}
+ol.dias b{color:var(--accent);margin-right:6px;font-size:13px}
+.duvidas{display:flex;flex-direction:column;gap:8px}
+.duvidas details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--surface)}
+.duvidas summary{cursor:pointer;font-weight:700}
+.duvidas details p{margin:8px 0 0}
+.estudo .secao-ref{display:block;font-size:13.5px;color:var(--accent);font-weight:600;margin:-4px 0 12px}
+.caixa.caso{background:#e7f0f8;color:var(--fg)}
+.caixa.caso .rotulo{color:#1f6fa8}
+.caixa.professor{background:var(--surface-2);border:1px dashed var(--line)}
+.caixa.professor ul{margin:4px 0 0;padding-left:18px}
+@media (prefers-color-scheme:dark){.caixa.oracao{background:#2a2235}.caixa.caso{background:#1b2a36}}
+@media print{.duvidas details{border:0;padding:0}.duvidas details>p{display:block}.caixa.oracao,.caixa.caso{background:#fff!important;border:1px solid #999}}

@@ -3,6 +3,7 @@
 // (frequência e média) e certificado com QR Code de verificação.
 // O certificado também abre sem login em #/certificado/<código>.
 import { modal, fecharModal, mh, $v, erroEm, hoje, br, linkWhats, fmtTel, qrSvg, abrirFicha } from './pessoas.js';
+import { CURSO, LICOES_ESCOLA } from './escola-conteudo.js';
 
 let C;
 export function instalar(ctx) { C = ctx; }
@@ -11,6 +12,7 @@ const SIT = { cursando: ['Cursando', 'p-acc'], aprovado: ['Aprovado', 'p-ok'], r
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 const porExtenso = d => d ? `${+d.slice(8, 10)} de ${MESES[+d.slice(5, 7) - 1]} de ${d.slice(0, 4)}` : '';
 const nota = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+export const linkApostila = (ig, n) => location.origin + location.pathname + '#/apostila/' + ig + (n ? '/' + n : '');
 const linkCert = c => location.origin + location.pathname + '#/certificado/' + c;
 const turmaDoHash = () => { const m = location.hash.match(/^#\/escola\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const gere = () => C.pode(['pastor', 'secretaria']);
@@ -30,7 +32,12 @@ export async function telaEscola(main) {
   const { esc, sb } = C;
   main.innerHTML = C.cab('Escola de Obreiros', 'Turmas, chamada, notas e certificados. O professor de cada turma faz a chamada e lança as notas pelo próprio acesso.',
     gere() ? `<button class="btn pri" data-nova>${C.icon('escola')}Nova turma</button>` : '') +
-    `<section class="panel"><h2>Turmas</h2><div id="turmas"><div class="carregando">Carregando…</div></div></section>`;
+    `<section class="panel"><h2>Turmas</h2><div id="turmas"><div class="carregando">Carregando…</div></div></section>
+    <section class="panel"><h2>Apostila do curso <a class="lnk" href="${esc(linkApostila(C.S.igrejaId, 'todos'))}" target="_blank" rel="noopener">Apostila completa para imprimir ›</a></h2>
+      <p class="muted" style="margin:-4px 0 12px">${esc(CURSO.subtitulo)}. Cada lição tem estudo, caso para discutir em grupo, perguntas, tarefa prática, revisão e orientações para o professor. Os alunos abrem pelo link, sem login.</p>
+      <div class="lista">${LICOES_ESCOLA.map((l, i) => `<div class="linha"><span class="num-estudo">${i + 1}</span><div class="cresce"><b style="font-weight:600">${esc(l.titulo)}</b><div class="muted" style="font-size:13.5px">${esc(l.objetivo)}</div></div>
+        <a class="btn sm" href="${esc(linkApostila(C.S.igrejaId, i + 1))}" target="_blank" rel="noopener">Abrir</a></div>`).join('')}</div>
+      <div class="acts" style="margin-top:12px"><button class="btn sm" data-copiar-apostila>Copiar link para os alunos</button></div></section>`;
   const [{ data: ts, error }, { data: als }, eq] = await Promise.all([
     sb.from('escola_turmas').select('*').eq('igreja_id', C.S.igrejaId).order('criado_em', { ascending: false }),
     sb.from('escola_alunos').select('turma_id,situacao').eq('igreja_id', C.S.igrejaId),
@@ -49,6 +56,7 @@ export async function telaEscola(main) {
   main.onclick = e => {
     const t = e.target.closest('[data-turma]'); if (t) { location.hash = '#/escola/' + t.dataset.turma; return; }
     if (e.target.closest('[data-nova]')) formTurma(null, eq, id => { location.hash = '#/escola/' + id; });
+    if (e.target.closest('[data-copiar-apostila]')) { const l = linkApostila(C.S.igrejaId); navigator.clipboard.writeText(l).then(() => C.toast('Link da apostila copiado.'), () => prompt('Copie o link:', l)); }
   };
 }
 
@@ -127,7 +135,7 @@ async function telaTurma(main, id) {
   const fs = ativos.map(freq).filter(x => x !== null), ms = ativos.map(media).filter(x => x !== null);
 
   main.innerHTML = C.cab(esc(t.nome), `${esc(t.curso)}${t.inicio ? ' · ' + br(t.inicio) + (t.fim ? ' a ' + br(t.fim) : '') : ''}${t.horario ? ' · ' + esc(t.horario) : ''}${t.local ? ' · ' + esc(t.local) : ''} · Professor: ${esc((eq.find(e => e.user_id === t.professor_id) || {}).nome || 'a definir')}`,
-    `<a class="btn" href="#/escola">‹ Turmas</a>${gere() ? '<button class="btn" data-editar>Editar turma</button><button class="btn pri" data-matricular>Matricular alunos</button>' : ''}`) +
+    `<a class="btn" href="#/escola">‹ Turmas</a><a class="btn" href="${esc(linkApostila(t.igreja_id))}" target="_blank" rel="noopener">Apostila</a>${gere() ? '<button class="btn" data-editar>Editar turma</button><button class="btn pri" data-matricular>Matricular alunos</button>' : ''}`) +
     `<div class="kpis">
       <div class="kpi"><span class="l">Alunos</span><span class="v">${ativos.length}</span><span class="s">${(n => n === 1 ? '1 aprovado' : n + ' aprovados')(alunos.filter(a => a.situacao === 'aprovado').length)}</span></div>
       <div class="kpi"><span class="l">Aulas dadas</span><span class="v">${aulasComChamada.size}</span><span class="s">${(aulas || []).length} cadastradas</span></div>
@@ -153,9 +161,12 @@ async function telaTurma(main, id) {
           <div class="acts" style="margin-top:8px"><button class="btn pri sm" data-fechar-resultado>Fechar resultado da turma</button></div></div>` : ''}`
         : `<div class="vazio">Nenhum aluno matriculado.${gere() ? ' Use "Matricular alunos" para escolher entre os membros da igreja.' : ''}</div>`;
     } else if (abaTurma === 'aulas') {
+      const dadas = new Set((aulas || []).map(a => a.tema));
+      const proxima = LICOES_ESCOLA.findIndex((l, i) => !dadas.has(`Lição ${i + 1}: ${l.titulo}`));
       el.innerHTML = (cuida ? `<form class="f" id="f-aula" style="grid-template-columns:150px 1fr 1fr auto;align-items:end;margin-bottom:14px">
+          <div class="fld full"><label for="au-lic">Lição da apostila</label><select id="au-lic"><option value="">Outro tema</option>${LICOES_ESCOLA.map((l, i) => `<option value="${i + 1}" ${i === proxima ? 'selected' : ''}>${i + 1}. ${esc(l.titulo)}${dadas.has(`Lição ${i + 1}: ${l.titulo}`) ? ' ✓' : ''}</option>`).join('')}</select></div>
           <div class="fld"><label for="au-data">Data</label><input id="au-data" type="date" value="${hoje()}" required></div>
-          <div class="fld"><label for="au-tema">Tema da aula</label><input id="au-tema" required minlength="2" placeholder="Ex.: O chamado do obreiro"></div>
+          <div class="fld"><label for="au-tema">Tema da aula</label><input id="au-tema" required minlength="2" placeholder="Ex.: O chamado do obreiro" value="${proxima >= 0 ? esc(`Lição ${proxima + 1}: ${LICOES_ESCOLA[proxima].titulo}`) : ''}"></div>
           <div class="fld"><label for="au-prof">Professor <span class="muted">(se for outro)</span></label><input id="au-prof" placeholder="opcional"></div>
           <button class="btn pri" type="submit">Adicionar aula</button><div id="au-msg" class="fld full"></div></form>` : '') +
         ((aulas || []).length ? `<div class="tw"><table><thead><tr><th>Data</th><th>Tema</th><th class="r">Presentes</th><th></th></tr></thead><tbody>
@@ -180,6 +191,8 @@ async function telaTurma(main, id) {
   };
 
   const ligarFormularios = () => {
+    const sl = document.getElementById('au-lic');
+    if (sl) sl.onchange = () => { const i = +sl.value; document.getElementById('au-tema').value = i ? `Lição ${i}: ${LICOES_ESCOLA[i - 1].titulo}` : ''; };
     const fa = document.getElementById('f-aula');
     if (fa) fa.onsubmit = e => { e.preventDefault(); C.ocupado(e.target.querySelector('[type=submit]'), async () => {
       const { data: nova, error } = await sb.from('escola_aulas').insert({ igreja_id: t.igreja_id, turma_id: id, data: $v('au-data'), tema: $v('au-tema'), professor: $v('au-prof') || null }).select('id').single();
@@ -318,5 +331,56 @@ export async function telaCertificado(codigo) {
         <div class="cert-codigo">Código ${esc(codigo)}</div>
       </div>
     </article></div>`;
+  app.onclick = e => { if (e.target.closest('[data-imprimir]')) window.print(); };
+}
+
+
+/* ------------------------------------------------------------------ */
+/* apostila (página pública para alunos e professores)                 */
+/* ------------------------------------------------------------------ */
+export const blocoLicaoEscola = (l, i, esc) => `
+  <article class="estudo">
+    <div class="estudo-num">Lição ${i + 1} de ${LICOES_ESCOLA.length}</div>
+    <h1>${esc(l.titulo)}</h1>
+    <p class="estudo-resumo"><b>Objetivo:</b> ${esc(l.objetivo)}</p>
+    <div class="caixa leia"><span class="rotulo">Leitura bíblica</span><b>${esc(l.leitura)}</b><span>Versículo-chave: ${esc(l.versiculo)}</span></div>
+    ${l.intro.map(p => `<p>${esc(p)}</p>`).join('')}
+    ${l.secoes.map((s, k) => `<h2>${k + 1}. ${esc(s.t)}</h2>${s.p.map(p => `<p>${esc(p)}</p>`).join('')}<span class="secao-ref">${esc(s.refs)}</span>`).join('')}
+    <div class="caixa caso"><span class="rotulo">Estudo de caso · para discutir em grupo</span>${esc(l.caso)}</div>
+    <h2>Perguntas para discussão</h2>
+    <ol class="perguntas">${l.perguntas.map(q => `<li>${esc(q)}</li>`).join('')}</ol>
+    <div class="caixa desafio"><span class="rotulo">Tarefa prática da semana</span>${esc(l.pratica)}</div>
+    <h2>Revisão</h2>
+    <ol class="perguntas">${l.revisao.map(q => `<li>${esc(q)}</li>`).join('')}</ol>
+    <details class="caixa professor"><summary class="rotulo">Orientações para o professor</summary><ul>${l.professor.map(p => `<li>${esc(p)}</li>`).join('')}</ul></details>
+  </article>`;
+
+export async function telaApostila(ig, qual) {
+  const { esc, sb } = C, app = document.getElementById('app');
+  window.scrollTo(0, 0);
+  const { data } = await sb.rpc('igreja_publica', { p_igreja: ig });
+  const igreja = data && data[0];
+  const topo = `<header class="leitura-topo"><a class="brand" href="#/apostila/${ig}"><div class="mark"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 10h12"/></svg></div>
+    <div><b>${igreja ? esc(igreja.nome) : 'Livres Connect'}</b><small>${esc(CURSO.nome)}</small></div></a></header>`;
+  if (!igreja) { app.innerHTML = `<div class="leitura">${topo}<section class="estudo"><h1>Apostila indisponível</h1><p>Este link não está ativo. Fale com a coordenação da Escola.</p></section></div>`; return; }
+  if (qual === 'todos') {
+    app.innerHTML = `<div class="leitura">${topo}<div class="estudo-acoes nao-imprime" style="margin:0 0 16px"><button class="btn pri" data-imprimir>Imprimir apostila</button><a class="btn" href="#/apostila/${ig}">Voltar</a></div>
+      <section class="estudo capa"><h1>${esc(CURSO.nome)}</h1><p class="estudo-resumo">${esc(CURSO.subtitulo)}</p>${CURSO.apresentacao.map(p => `<p>${esc(p)}</p>`).join('')}
+        <h2>Lições</h2><ol>${LICOES_ESCOLA.map(l => `<li>${esc(l.titulo)}</li>`).join('')}</ol></section>
+      <div class="quebra-pagina"></div>${LICOES_ESCOLA.map((l, i) => blocoLicaoEscola(l, i, esc)).join('<div class="quebra-pagina"></div>')}</div>`;
+    app.querySelectorAll('details.professor').forEach(d => { d.open = true; });
+  } else if (qual && LICOES_ESCOLA[+qual - 1]) {
+    const i = +qual - 1;
+    app.innerHTML = `<div class="leitura">${topo}${blocoLicaoEscola(LICOES_ESCOLA[i], i, esc)}
+      <div class="estudo-acoes nao-imprime"><button class="btn" data-imprimir>Imprimir esta lição</button></div>
+      <nav class="estudo-nav nao-imprime">${i > 0 ? `<a class="btn" href="#/apostila/${ig}/${i}">‹ Anterior</a>` : '<span></span>'}
+        <a class="btn ghost" href="#/apostila/${ig}">Todas as lições</a>
+        ${i < LICOES_ESCOLA.length - 1 ? `<a class="btn pri" href="#/apostila/${ig}/${i + 2}">Próxima ›</a>` : '<span></span>'}</nav></div>`;
+  } else {
+    app.innerHTML = `<div class="leitura">${topo}
+      <section class="estudo capa"><h1>${esc(CURSO.nome)}</h1><p class="estudo-resumo">${esc(CURSO.subtitulo)}</p>${CURSO.apresentacao.map(p => `<p>${esc(p)}</p>`).join('')}</section>
+      <ol class="lista-estudos">${LICOES_ESCOLA.map((l, i) => `<li><a href="#/apostila/${ig}/${i + 1}"><span class="num-estudo">${i + 1}</span><span class="cresce"><b>${esc(l.titulo)}</b><small>${esc(l.objetivo)}</small></span><span class="seta">›</span></a></li>`).join('')}</ol>
+      <p class="muted nao-imprime" style="text-align:center;font-size:13px;margin:18px 0 0"><a href="#/apostila/${ig}/todos">Ver a apostila completa para imprimir</a></p></div>`;
+  }
   app.onclick = e => { if (e.target.closest('[data-imprimir]')) window.print(); };
 }

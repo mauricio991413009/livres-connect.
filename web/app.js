@@ -131,6 +131,7 @@ const escalaPublica = () => { const m = location.hash.match(/^#\/escala\/([0-9a-
 const roteiroPublico = () => { const m = location.hash.match(/^#\/discipulado\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const portalMembro = () => { const m = location.hash.match(/^#\/membro\/([0-9a-f]{64})/i); return m ? m[1].toLowerCase() : null; };
 const oracaoPublica = () => { const m = location.hash.match(/^#\/oracao\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
+const apostilaPublica = () => { const m = location.hash.match(/^#\/apostila\/([0-9a-f-]{36})(?:\/(\d+|todos))?/i); return m ? [m[1], m[2] || null] : null; };
 const certificadoPublico = () => { const m = location.hash.match(/^#\/certificado\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const fichaPublica = () => { const m = location.hash.match(/^#\/ficha\/([0-9a-f-]{36})/i); return m ? m[1] : null; };
 const ir = r => { if (location.hash !== '#/' + r) location.hash = '#/' + r; else render(); };
@@ -157,6 +158,7 @@ async function iniciar() {
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
   if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
+  if (apostilaPublica()) return Escola.telaApostila(...apostilaPublica());
   if (roteiroPublico()) return Discipulado.telaRoteiroPublico(...roteiroPublico());
   if (oracaoPublica()) return Cuidado.telaOracaoPublica(oracaoPublica());
   if (portalMembro()) return Portal.telaPortal(portalMembro());
@@ -208,6 +210,7 @@ window.addEventListener('hashchange', () => {
   if (escalaPublica()) return Gestao.telaEscalaPublica(escalaPublica());
   if (estudosPublico()) return Estudos.telaEstudosPublico(...estudosPublico());
   if (certificadoPublico()) return Escola.telaCertificado(certificadoPublico());
+  if (apostilaPublica()) return Escola.telaApostila(...apostilaPublica());
   if (roteiroPublico()) return Discipulado.telaRoteiroPublico(...roteiroPublico());
   if (oracaoPublica()) return Cuidado.telaOracaoPublica(oracaoPublica());
   if (portalMembro()) return Portal.telaPortal(portalMembro());
