@@ -4,7 +4,7 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 
 **No ar:** https://livres-connect.vercel.app
 
-**Situação atual: 1ª e 2ª etapas completas; 3ª etapa em andamento** (relatórios prontos; automações em construção; inteligência artificial fica para depois).
+**Situação atual: 1ª e 2ª etapas completas; 3ª etapa com relatórios e automações prontos** (inteligência artificial fica para depois: precisa de uma conta na Anthropic criada pelo pastor; custo estimado abaixo de R$ 30/mês).
 
 - **Base:** login com verificação em duas etapas, várias igrejas com dados isolados, perfis de acesso, convites, configurações da igreja e auditoria.
 - **Pessoas:** membros com foto e carteirinha digital, visitantes com ficha pública por QR Code (encaminhada automaticamente a um líder), Jornada da Alma em quadro com atividades por etapa, histórico de contatos e anotações pastorais restritas.
