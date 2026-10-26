@@ -527,3 +527,14 @@ ol.dias b{color:var(--accent);margin-right:6px;font-size:13px}
   #relatorio .btn,#relatorio .dica{display:none!important}
   .grafico .serie1{fill:#008f7e}.grafico .serie2{fill:#b8860b}
 }
+
+/* automações · tarefas do dia */
+.tar-cab{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.tar-cab h2{margin:0}
+.tar-tit{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tar-acoes{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.autos .chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.autos .chk input{margin-top:4px}
+.auto-dias{display:flex;align-items:center;gap:6px}
+.auto-dias input{width:76px}
+@media (max-width:600px){.tarefa .tar-acoes{width:100%}}

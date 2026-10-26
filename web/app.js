@@ -14,6 +14,7 @@ import * as Cuidado from './cuidado.js';
 import * as Comunicacao from './comunicacao.js';
 import * as Portal from './portal.js';
 import * as Relatorios from './relatorios.js';
+import * as Tarefas from './tarefas.js';
 import { ligarInstalar } from './instalar.js';
 
 /* ------------------------------------------------------------------ */
@@ -400,7 +401,7 @@ async function telaPainel(main) {
   const vePessoas = pode(['pastor', 'presbiterio', 'secretaria', 'lider']);
   const veFin = pode(['pastor', 'presbiterio', 'tesouraria']);
   main.innerHTML = cab('Olá, ' + esc(S.nome.split(' ')[0]), `${esc(ig.nome)}${ig.cidade ? ' · ' + esc(ig.cidade) + (ig.uf ? '/' + esc(ig.uf) : '') : ''} · ${perf.map(p => PERFIS[p]).join(', ')}`) + '<div id="avisos"></div><div id="instalar"></div><div class="kpis" id="kpis"><div class="carregando">Carregando números…</div></div>' +
-    (vePessoas ? '<section class="panel" id="atencao"><div class="carregando">Carregando…</div></section>' : '') +
+    '<section class="panel" id="tarefas-dia"><div class="carregando">Carregando suas tarefas…</div></section>' +
     `<section class="panel"><h2>Situação do projeto</h2><div class="lista">
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Login, verificação em duas etapas, várias igrejas, perfis de acesso, convites e auditoria</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Membros, visitantes com QR Code e Jornada da Alma</span></div>
@@ -409,7 +410,9 @@ async function telaPainel(main) {
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Pedidos de oração e atendimento pastoral com QR Code</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Comunicação pelo WhatsApp com lista de envio e aniversariantes</span></div>
       <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Portal do Membro no celular, com link pessoal sem senha</span></div>
-      <div class="linha"><span class="pill p-neu">etapa 3</span><span class="cresce">Relatórios avançados, automações e recursos de inteligência artificial</span></div></div></section>`;
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Relatórios do mês, prestação de contas, engajamento e relatório anual</span></div>
+      <div class="linha"><span class="pill p-ok">pronto</span><span class="cresce">Automações: tarefas do dia para cada pessoa da equipe</span></div>
+      <div class="linha"><span class="pill p-neu">depois</span><span class="cresce">Recursos de inteligência artificial (o sistema já está preparado)</span></div></div></section>`;
 
   ligarInstalar(document.getElementById('instalar'));
   if (pode(['pastor', 'tesouraria'])) {
@@ -441,7 +444,7 @@ async function telaPainel(main) {
     kp.push(['Pedidos de oração', po || 0, 'em aberto']);
     if (at) kp.push(['Querem conversar', at, 'atendimentos aguardando retorno']);
   }
-  if (vePessoas) Pessoas.painelAtencao($('#atencao'));
+  Tarefas.painelTarefas($('#tarefas-dia'));
   $('#kpis').innerHTML = kp.map(([l, v, s]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join('');
 }
 
@@ -530,7 +533,7 @@ async function telaIgreja(main) {
     sb.from('ministerios').select('id,nome,ativo').eq('igreja_id', S.igrejaId).order('nome'),
     sb.from('jornada_atividades_modelo').select('etapa,descricao,ordem').eq('igreja_id', S.igrejaId).eq('ativo', true).order('etapa').order('ordem')
   ]);
-  main.innerHTML = cab('Configurações da igreja', 'Dados da igreja, ministérios e atividades da Jornada da Alma.') +
+  main.innerHTML = cab('Configurações da igreja', 'Dados da igreja, ministérios, automações e atividades da Jornada da Alma.') +
     `<div class="grid"><section class="panel c6"><h2>Dados da igreja</h2>
       <form class="f" id="f-ig">
         <div class="fld full"><label for="in">Nome</label><input id="in" required value="${esc(ig.nome)}"></div>
@@ -546,10 +549,12 @@ async function telaIgreja(main) {
         <button class="btn pri" type="submit">Adicionar</button>
       </form>
       <div class="lista" style="margin-top:10px">${(mins || []).map(m => `<div class="linha"><span class="cresce">${esc(m.nome)}</span>${m.ativo ? '' : '<span class="pill p-neu">inativo</span>'}<button class="btn sm" data-min="${m.id}" data-valor="${!m.ativo}">${m.ativo ? 'Desativar' : 'Reativar'}</button></div>`).join('')}</div></section>
+     <section class="panel c12"><h2>Automações</h2><div id="automacoes"><div class="carregando">Carregando…</div></div></section>
      <section class="panel c12"><h2>Atividades da Jornada da Alma</h2>
       <p class="muted">Estas são as atividades padrão de cada etapa. A edição chega junto com o módulo Jornada da Alma.</p>
       <div class="tw"><table><thead><tr><th>Etapa</th><th>Atividades</th></tr></thead><tbody>${ETAPAS.map((n, i) => `<tr><td><b style="font-weight:600">${n}</b></td><td>${(ativ || []).filter(a => a.etapa === i).map(a => esc(a.descricao)).join(' · ')}</td></tr>`).join('')}</tbody></table></div></section></div>`;
 
+  Tarefas.secaoAutomacoes($('#automacoes'));
   $('#f-ig').onsubmit = e => {
     e.preventDefault();
     ocupado($('button[type=submit]', e.target), async () => {
@@ -722,6 +727,7 @@ Cuidado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, 
 Comunicacao.instalar({ sb, S, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado });
 Portal.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Comunicacao.registrarPortal(Portal);
+Tarefas.instalar({ sb, S, esc, toast, pode, igrejaAtual, traduzErro });
 Relatorios.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Escola.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });

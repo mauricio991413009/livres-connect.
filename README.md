@@ -140,7 +140,7 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0014_comunicacao.sql` | Comunicados por público e lista de envio pelo WhatsApp (`comunicado_destinatarios`, `comunicado_marcar`, `comunicados_resumo`) |
 | `supabase/migrations/0015_portal_membro.sql` | Portal do Membro com link pessoal sem senha: só a impressão digital SHA-256 do código fica no banco (`portal_gerar_link`, `portal_dados` e ações do portal) |
 | `supabase/migrations/0016_relatorios.sql` | Relatórios: pastoral, financeiro, série mensal e engajamento (`relatorio_pastoral`, `relatorio_financeiro`, `relatorio_serie`, `relatorio_engajamento`) |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (251 verificações) |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (273 verificações) |
 | `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estudos.js` e `estudos-conteudo.js` (estudos para novo convertido; o texto das lições fica no segundo arquivo), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 
