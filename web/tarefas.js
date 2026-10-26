@@ -47,7 +47,10 @@ function mensagem(t) {
 export async function painelTarefas(el) {
   const { esc, sb } = C;
   const { data, error } = await sb.rpc('minhas_tarefas', { p_igreja: C.S.igrejaId });
-  if (error) { el.innerHTML = `<h2>Suas tarefas de hoje</h2><div class="vazio">${esc(C.traduzErro(error))}</div>`; return; }
+  if (error) {  // banco ainda sem as automações: volta ao quadro antigo
+    if (C.pode(['pastor', 'presbiterio', 'secretaria', 'lider'])) { const P = await import('./pessoas.js'); return P.painelAtencao(el); }
+    el.remove(); return;
+  }
   const ts = data || [];
   const limite = el.dataset.todas ? ts.length : 8;
   el.innerHTML = `<div class="tar-cab"><h2>Suas tarefas de hoje</h2>${ts.length ? `<span class="pill p-acc">${ts.length}</span>` : ''}
@@ -112,7 +115,7 @@ export async function painelTarefas(el) {
 export async function secaoAutomacoes(el) {
   const { esc, sb } = C;
   const { data, error } = await sb.rpc('automacoes_da_igreja', { p_igreja: C.S.igrejaId });
-  if (error) { el.innerHTML = `<div class="vazio">${esc(C.traduzErro(error))}</div>`; return; }
+  if (error) { el.innerHTML = '<div class="vazio">As automações estão sendo ativadas. Volte daqui a pouco.</div>'; return; }
   el.innerHTML = `<p class="muted" style="margin-top:0">Todo dia, cada pessoa da equipe recebe no Painel a lista de quem precisa de cuidado, só com as pessoas que ela acompanha. Ligue, desligue e ajuste os prazos.</p>
     <div class="lista autos">${(data || []).map(r => `<div class="linha" data-regra="${r.regra}">
       <label class="chk cresce"><input type="checkbox" ${r.ativo ? 'checked' : ''} data-ativo><span><b style="font-weight:600">${esc(r.titulo)}</b><span class="muted" style="display:block;font-size:13px">${esc(r.descricao)}</span></span></label>
