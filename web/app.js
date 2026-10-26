@@ -13,6 +13,7 @@ import * as Discipulado from './discipulado.js';
 import * as Cuidado from './cuidado.js';
 import * as Comunicacao from './comunicacao.js';
 import * as Portal from './portal.js';
+import * as Relatorios from './relatorios.js';
 import { ligarInstalar } from './instalar.js';
 
 /* ------------------------------------------------------------------ */
@@ -79,6 +80,7 @@ const ICONS = {
   discipulado: '<circle cx="8" cy="7.5" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5M13.5 15.2c.9-.8 1.9-1.2 3-1.2 2.2 0 3.9 1.4 4.5 4"/>',
   cuidado: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
   comunicacao: '<path d="M4 10v4h3l6 4V6L7 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/>',
+  relatorios: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
   estudos: '<path d="M4 5.5C6.5 4 9.5 4 12 5.5v14c-2.5-1.5-5.5-1.5-8 0z"/><path d="M20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/>',
   plataforma: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'
 };
@@ -95,6 +97,7 @@ const MODULOS = [
   { k: 'discipulado', l: 'Discipulado', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'cuidado', l: 'Oração e atendimento', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'] },
   { k: 'comunicacao', l: 'Comunicação', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
+  { k: 'relatorios', l: 'Relatórios', perfis: ['pastor', 'presbiterio', 'secretaria', 'tesouraria'] },
   { k: 'escola', l: 'Escola de Obreiros', perfis: ['pastor', 'presbiterio', 'secretaria', 'lider'] },
   { k: 'financeiro', l: 'Financeiro', perfis: ['pastor', 'presbiterio', 'tesouraria'] },
   { k: 'agenda', l: 'Agenda e eventos', perfis: null },
@@ -376,7 +379,7 @@ function render() {
   ({
     painel: telaPainel, usuarios: telaUsuarios, igreja: telaIgreja, auditoria: telaAuditoria, seguranca: telaSeguranca,
     membros: Pessoas.telaMembros, visitantes: Pessoas.telaVisitantes, jornada: Pessoas.telaJornada,
-    estudos: Estudos.telaEstudos, escola: Escola.telaEscola, discipulado: Discipulado.telaDiscipulado, cuidado: Cuidado.telaCuidado, comunicacao: Comunicacao.telaComunicacao,
+    estudos: Estudos.telaEstudos, escola: Escola.telaEscola, discipulado: Discipulado.telaDiscipulado, cuidado: Cuidado.telaCuidado, comunicacao: Comunicacao.telaComunicacao, relatorios: Relatorios.telaRelatorios,
     financeiro: Gestao.telaFinanceiro, agenda: Gestao.telaAgenda, escalas: Gestao.telaEscalas
   })[r](main);
 }
@@ -719,6 +722,7 @@ Cuidado.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, 
 Comunicacao.instalar({ sb, S, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado });
 Portal.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Comunicacao.registrarPortal(Portal);
+Relatorios.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Escola.instalar({ sb, S, esc, toast, pode, igrejaAtual, cab, icon, traduzErro, ocupado, ETAPAS });
 Gestao.instalar({ sb, S, $, esc, toast, pode, lideraMin, igrejaAtual, cab, icon, traduzErro, ocupado, render });
 

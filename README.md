@@ -4,7 +4,7 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 
 **No ar:** https://livres-connect.vercel.app
 
-**Situação atual: 1ª e 2ª etapas completas.** A 3ª etapa (relatórios avançados, automações e inteligência artificial) ainda não começou.
+**Situação atual: 1ª e 2ª etapas completas; 3ª etapa em andamento** (relatórios prontos; automações em construção; inteligência artificial fica para depois).
 
 - **Base:** login com verificação em duas etapas, várias igrejas com dados isolados, perfis de acesso, convites, configurações da igreja e auditoria.
 - **Pessoas:** membros com foto e carteirinha digital, visitantes com ficha pública por QR Code (encaminhada automaticamente a um líder), Jornada da Alma em quadro com atividades por etapa, histórico de contatos e anotações pastorais restritas.
@@ -15,6 +15,7 @@ Sistema de gestão eclesiástica para várias igrejas: membros, visitantes, Jorn
 - **Comunicação:** comunicados para membros, novos convertidos, visitantes, quem serve ou um ministério. Cada pessoa recebe pelo WhatsApp com o próprio nome, e o sistema marca quem já recebeu. Texto pronto para grupos, aniversariantes da semana (nascimento e casamento) e modelos de mensagem. Quem lidera um ministério envia para o próprio ministério.
 - **Portal do Membro:** cada membro recebe pelo WhatsApp um link só dele, sem senha (gerar um link novo invalida o anterior). No celular ele vê a carteirinha, confirma as escalas, acompanha a agenda e os avisos, pede oração, ora pelos pedidos do mural, pede conversa com o pastor, atualiza os próprios dados, vê a Escola de Obreiros (frequência, média e certificado) e o discipulado; o discipulador registra os encontros por ali. O envio dos links fica na ficha da pessoa e em Comunicação.
 - **Aplicativo no celular:** o sistema e o Portal do Membro se instalam como aplicativo no Android e no iPhone, direto do site, sem loja e sem custo (ícone na tela inicial, abre em tela cheia, aviso quando está sem internet). O Painel, a tela Minha conta e o Portal mostram o passo a passo de cada aparelho. Quem instala a partir do Portal abre direto no próprio portal.
+- **Relatórios:** pastoral do mês (com resumo escrito automaticamente e comparação com o mês anterior), prestação de contas financeira (categorias, formas de pagamento, campanhas, gráfico do ano, linhas de assinatura), engajamento (membros sem contato, novos convertidos sem discipulado, quem nunca serviu, escalas por ministério, frequência na Escola) e relatório anual para a assembleia. Tudo imprimível.
 - **Perfis:** pastor presidente, pastora, presbitério, tesouraria, secretaria, líder, obreiro, missionário, evangelista e diácono.
 - **Gestão:** financeiro (lançamentos, contas a pagar e receber, comprovantes, campanhas, planilha e relatório para imprimir), agenda com eventos semanais e escalas com lembrete pelo WhatsApp e confirmação do voluntário por link, sem login.
 
@@ -138,7 +139,8 @@ Em **Minha conta**, ative a verificação em duas etapas. Você vai precisar de 
 | `supabase/migrations/0013_oracao_atendimento.sql` | Pedidos de oração e atendimento pastoral, com página pública (`registrar_pedido_oracao`, `solicitar_atendimento`, `orar_por`); a auditoria deixa de fora os textos sigilosos |
 | `supabase/migrations/0014_comunicacao.sql` | Comunicados por público e lista de envio pelo WhatsApp (`comunicado_destinatarios`, `comunicado_marcar`, `comunicados_resumo`) |
 | `supabase/migrations/0015_portal_membro.sql` | Portal do Membro com link pessoal sem senha: só a impressão digital SHA-256 do código fica no banco (`portal_gerar_link`, `portal_dados` e ações do portal) |
-| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (232 verificações) |
+| `supabase/migrations/0016_relatorios.sql` | Relatórios: pastoral, financeiro, série mensal e engajamento (`relatorio_pastoral`, `relatorio_financeiro`, `relatorio_serie`, `relatorio_engajamento`) |
+| `supabase/testes/` | Testes em Postgres puro, com o `auth` do Supabase simulado (251 verificações) |
 | `web/` | Site estático, sem etapa de build: `index.html`, `app.js` (base), `pessoas.js` (fase Pessoas), `gestao.js` (fase Gestão), `estudos.js` e `estudos-conteudo.js` (estudos para novo convertido; o texto das lições fica no segundo arquivo), `estilos.css`, `config.js` |
 | `vercel.json` | Faz a Vercel servir a pasta `web` na raiz do site |
 

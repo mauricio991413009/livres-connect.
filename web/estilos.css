@@ -483,3 +483,47 @@ ol.dias b{color:var(--accent);margin-right:6px;font-size:13px}
 .caixa.professor ul{margin:4px 0 0;padding-left:18px}
 @media (prefers-color-scheme:dark){.caixa.oracao{background:#2a2235}.caixa.caso{background:#1b2a36}}
 @media print{.duvidas details{border:0;padding:0}.duvidas details>p{display:block}.caixa.oracao,.caixa.caso{background:#fff!important;border:1px solid #999}}
+
+/* ---------- Relatórios ---------- */
+:root{--serie1:#008f7e;--serie2:#b8860b}
+@media (prefers-color-scheme:dark){:root{--serie1:#2bab98;--serie2:#b5862a}}
+.rel-barra{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.rel-ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rel-ctl label{display:flex;gap:6px;align-items:center;font-size:14px;font-weight:600}
+.rel-cab{display:none}
+.resumo-escrito p{margin:0 0 8px;font-size:15.5px;line-height:1.55;max-width:80ch}
+.delta{font-size:12.5px;font-weight:600}
+.delta.sobe{color:var(--ok)}.delta.desce{color:var(--bad)}.delta.igual{color:var(--muted)}
+.positivo{color:var(--ok)}.negativo{color:var(--bad)}
+.grafico{margin:0;position:relative}
+.grafico figcaption:empty{display:none}
+.grafico svg{width:100%;height:auto;display:block;overflow:visible}
+.grafico .grade{stroke:var(--line);stroke-width:1}
+.grafico .base{stroke:var(--muted);stroke-width:1}
+.grafico .eixo{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.grafico .serie1{fill:var(--serie1)}.grafico .serie2{fill:var(--serie2)}
+.grafico .alvo{fill:transparent}
+.grafico g.col{cursor:default}
+.grafico g.col.ativa .alvo{fill:var(--surface-2)}
+.legenda{display:flex;gap:16px;font-size:13px;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.legenda i,.dica i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legenda i.serie1,.dica i.serie1{background:var(--serie1)}.legenda i.serie2,.dica i.serie2{background:var(--serie2)}
+.dica{position:absolute;top:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;box-shadow:var(--shadow);pointer-events:none;display:flex;flex-direction:column;gap:2px;white-space:nowrap}
+.partes{display:flex;flex-direction:column;gap:8px}
+.parte{display:grid;grid-template-columns:minmax(90px,170px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
+.parte .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.parte .trilho{height:10px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.parte .trilho span{display:block;height:100%;background:var(--serie1);border-radius:0 4px 4px 0}
+.rel-assinaturas{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px;text-align:center;font-size:13px;color:var(--muted)}
+.rel-assinaturas span{display:block;border-top:1px solid var(--fg);margin-bottom:6px}
+.tabela-ano tr.total td{font-weight:700;border-top:2px solid var(--line)}
+@media (max-width:600px){.rel-assinaturas{grid-template-columns:1fr}.parte{grid-template-columns:minmax(70px,110px) minmax(0,1fr) auto}}
+@media print{
+  .rel-cab{display:block;margin-bottom:10px}.rel-cab .igreja{font-size:10pt;text-transform:uppercase;letter-spacing:.1em;color:#0d6b61;font-weight:700}
+  .rel-cab h2{font-size:20pt;margin:2px 0}.rel-cab p{margin:0;color:#555}
+  #relatorio .panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid;padding:10px 12px}
+  #relatorio .kpis{grid-template-columns:repeat(3,1fr)}#relatorio .kpi{border:1px solid #ccc}
+  #relatorio .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#relatorio .c12{grid-column:1/-1}
+  #relatorio .btn,#relatorio .dica{display:none!important}
+  .grafico .serie1{fill:#008f7e}.grafico .serie2{fill:#b8860b}
+}
