@@ -23,6 +23,7 @@ psql -d "$DB" -q -v ON_ERROR_STOP=1 \
   -f ../migrations/0015_portal_membro.sql \
   -f ../migrations/0016_relatorios.sql \
   -f ../migrations/0017_automacoes.sql \
+  -f ../migrations/0018_portal_foto.sql \
   -f teste_isolamento.sql \
   -f teste_pessoas.sql \
   -f teste_gestao.sql \

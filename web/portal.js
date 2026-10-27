@@ -97,6 +97,8 @@ export async function telaPortal(token) {
     return;
   }
   guardarToken(token);
+  let fotoMini = null;
+  try { const { data: f } = await sb.rpc('portal_foto', { p_token: token }); fotoMini = f || null; } catch (e) { /* sem foto */ }
   // Ao instalar a partir desta página, o aplicativo abre direto no portal deste membro
   try {
     const base = location.origin + location.pathname.replace(/[^/]*$/, '');
@@ -140,7 +142,7 @@ export async function telaPortal(token) {
       ${e.certificado ? `<a class="btn sm pri" href="#/certificado/${e.certificado}">Certificado</a>` : `<span class="pill ${e.situacao === 'cursando' ? 'p-acc' : 'p-neu'}">${e.situacao}</span>`}</div>`).join(''));
     if (P.etapa >= 4) {
       const validade = '12/' + (new Date().getFullYear() + 1);
-      h += cartao('Carteirinha', `<div class="idcard"><div class="ch">${esc(IG.nome)}</div><div class="foto vazia">${esc(P.nome.split(' ').filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('').toUpperCase())}</div>
+      h += cartao('Carteirinha', `<div class="idcard"><div class="ch">${esc(IG.nome)}</div>${fotoMini ? `<img class="foto" src="${esc(fotoMini)}" alt="">` : `<div class="foto vazia">${esc(P.nome.split(' ').filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('').toUpperCase())}</div>`}
         <div class="info"><div class="nm">${esc(P.nome)}</div><dl><dt>Matrícula</dt><dd>${esc(P.matricula)}</dd><dt>Membro desde</dt><dd>${br(P.membro_desde)}</dd><dt>Ministério</dt><dd>${esc(P.ministerio || '—')}</dd><dt>Validade</dt><dd>${validade}</dd></dl></div>
         <div class="qr">${qrSvg(`${IG.nome} | ${P.nome} | ${P.matricula} | válida até ${validade}`, 3)}</div></div>`);
     }

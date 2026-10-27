@@ -59,6 +59,15 @@ async function ultimosContatos(ids) {
   const { data } = await C.sb.from('contatos').select('pessoa_id,data').in('pessoa_id', ids).order('data', { ascending: false });
   const m = {}; (data || []).forEach(c => { if (!m[c.pessoa_id]) m[c.pessoa_id] = c.data; }); return m;
 }
+// Miniatura (JPEG ~240x300) guardada na ficha para o Portal do Membro, que não tem login.
+async function miniatura(arq) {
+  const bmp = await createImageBitmap(arq), W = 240, H = 300, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const k = Math.max(W / bmp.width, H / bmp.height), w = bmp.width * k, h = bmp.height * k;
+  c.getContext('2d').drawImage(bmp, (W - w) / 2, (H - h) / 2, w, h);
+  for (const q of [0.8, 0.65, 0.5]) { const u = c.toDataURL('image/jpeg', q); if (u.length <= 55000) return u; }
+  throw new Error('miniatura grande demais');
+}
 const fotoCache = new Map();
 async function fotoUrl(p) {
   if (!p.foto_url) return null;
@@ -261,6 +270,7 @@ export async function abrirFicha(id, depois) {
         const { error: eu } = await sb.storage.from('fotos').upload(caminho, arq, { upsert: true, contentType: arq.type });
         if (eu) return erroEm('d-msg', eu);
         upd.foto_url = caminho; fotoCache.clear();
+        try { upd.foto_mini = await miniatura(arq); } catch (e) { /* sem miniatura: o Portal mostra as iniciais */ }
       }
       const { error: er } = await sb.from('pessoas').update(upd).eq('id', id);
       if (er) return erroEm('d-msg', er);

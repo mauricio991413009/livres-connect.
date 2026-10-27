@@ -91,6 +91,19 @@ do $$ begin
 exception when others then perform public._t('link antigo deixa de valer', true); end $$;
 select public._t('link novo funciona', (portal_dados(:'tok2'))->'pessoa'->>'nome' = 'Ana Ribeiro');
 reset role;
+-- Foto da carteirinha
+update public.pessoas set foto_mini = 'data:image/jpeg;base64,AAAA' where id = :'ana';
+set role anon;
+select public._t('portal entrega a foto a quem tem o link', portal_foto(:'tok2') = 'data:image/jpeg;base64,AAAA');
+do $$ begin
+  perform portal_foto(repeat('b', 64));
+  perform public._t('portal_foto recusa link inválido', false);
+exception when others then perform public._t('portal_foto recusa link inválido', true); end $$;
+reset role;
+do $$ begin
+  update public.pessoas set foto_mini = 'javascript:alert(1)' where id = current_setting('t.ana')::uuid;
+  perform public._t('foto_mini só aceita JPEG em data URL', false);
+exception when check_violation then perform public._t('foto_mini só aceita JPEG em data URL', true); end $$;
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000e', false);
 select portal_revogar(:'ana');
