@@ -363,11 +363,12 @@ function render() {
     <header class="top">
       <div class="brand">${marca}<div><b>Livres Connect</b><small>${ig ? esc(ig.nome) : 'Administração'}</small></div></div>
       ${S.igrejas.length > 1 ? `<div class="ctl"><label for="sel-igreja">Igreja</label><select id="sel-igreja">${S.igrejas.map(i => `<option value="${i.id}" ${i.id === S.igrejaId ? 'selected' : ''}>${esc(i.nome)}</option>`).join('')}</select></div>` : ''}
+      ${pode(['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono']) ? '<div class="ctl sino-wrap"><button class="btn sm sino" id="sino" type="button" aria-label="Novidades">🔔 Novidades <span class="badge" id="sino-n" hidden></span></button></div>' : ''}
       <div class="ctl"><label>Conectado como</label><div style="display:flex;gap:8px;align-items:center"><b style="font-weight:600">${esc(S.nome)}</b><button class="btn sm" data-acao="sair">Sair</button></div></div>
     </header>
     <div class="app"><nav aria-label="Módulos">${nav}</nav><main id="main"><div class="wrap"><div class="carregando">Carregando…</div></div></main></div>`;
 
-  atualizarAvisos();
+  atualizarAvisos(); S.novidadesN = undefined; atualizarNovidades();
   const sel = $('#sel-igreja');
   if (sel) sel.onchange = () => { S.igrejaId = sel.value; guardar('lc-igreja', sel.value); render(); toast('Agora você está em ' + igrejaAtual().nome + '.'); };
 
@@ -426,8 +427,52 @@ async function atualizarAvisos() {
     fx.innerHTML = it.length ? `<div class="aviso ouro avisos-equipe"><b>Precisa da sua atenção:</b> ${it.join(' · ')}</div>` : '';
   }
 }
+/* Novidades: tudo que entrou (pedido de oração, conversa com pastor, cadastro, aluno dos Estudos) */
+const chaveVisto = () => 'lc-novidades-' + (S.user && S.user.id) + '-' + S.igrejaId;
+const lerVisto = () => { try { return localStorage.getItem(chaveVisto()) || new Date(Date.now() - 7 * 864e5).toISOString(); } catch (e) { return new Date(Date.now() - 7 * 864e5).toISOString(); } };
+const gravarVisto = t => { try { localStorage.setItem(chaveVisto(), t); } catch (e) { /* sem armazenamento */ } };
+async function listarNovidades() {
+  if (!sb || !S.igrejaId) return [];
+  const id = S.igrejaId, desde = new Date(Date.now() - 30 * 864e5).toISOString(), ev = [];
+  const q = (tabela, cols, f) => sb.from(tabela).select(cols).eq('igreja_id', id).gte('criado_em', desde).order('criado_em', { ascending: false }).limit(30)
+    .then(r => (r && !r.error && r.data) || [], () => []).then(f);
+  await Promise.all([
+    q('pedidos_oracao', 'nome,criado_em', d => d.forEach(x => ev.push({ t: x.criado_em, ic: '🙏', txt: `<b>${esc(x.nome)}</b> deixou um pedido de oração`, href: '#/cuidado' }))),
+    q('atendimentos', 'nome,criado_em', d => d.forEach(x => ev.push({ t: x.criado_em, ic: '💬', txt: `<b>${esc(x.nome)}</b> quer conversar com um pastor`, href: '#/cuidado' }))),
+    q('pessoas', 'nome,origem,criado_em', d => d.forEach(x => ev.push({ t: x.criado_em, ic: '🆕', txt: `Novo cadastro: <b>${esc(x.nome)}</b>${x.origem === 'qr' ? ' (QR Code)' : x.origem === 'estudos' ? ' (Estudos)' : ''}`, href: '#/visitantes' }))),
+    q('estudos_alunos', 'nome,criado_em', d => d.forEach(x => ev.push({ t: x.criado_em, ic: '📖', txt: `<b>${esc(x.nome)}</b> começou os Estudos`, href: '#/estudos' })))
+  ]);
+  return ev.sort((a, b) => (a.t < b.t ? 1 : -1)).slice(0, 40);
+}
+const quando = t => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); return m < 1 ? 'agora' : m < 60 ? m + ' min' : m < 1440 ? Math.floor(m / 60) + ' h' : Math.floor(m / 1440) + ' d'; };
+let novidadesCache = [];
+async function atualizarNovidades() {
+  const sino = document.getElementById('sino'); if (!sino) return;
+  const ev = await listarNovidades(), visto = lerVisto();
+  const n = ev.filter(e => e.t > visto).length;
+  if (n > (S.novidadesN || 0) && S.novidadesN !== undefined) toast(n - S.novidadesN === 1 ? 'Chegou uma novidade no sistema.' : `Chegaram ${n - S.novidadesN} novidades no sistema.`);
+  S.novidadesN = n; novidadesCache = ev;
+  const b = document.getElementById('sino-n'); if (b) { b.textContent = n > 99 ? '99+' : n; b.hidden = !n; }
+  sino.classList.toggle('tem', n > 0);
+}
+function abrirNovidades() {
+  let box = document.getElementById('novidades-box');
+  if (box) { box.remove(); return; }
+  const visto = lerVisto();
+  box = document.createElement('div'); box.id = 'novidades-box'; box.className = 'novidades-box';
+  box.innerHTML = '<div class="nv-top"><b>Novidades (últimos 30 dias)</b><button class="btn sm" type="button" id="nv-fechar">Fechar</button></div>' +
+    (novidadesCache.length ? novidadesCache.map(e => `<a class="nv-item ${e.t > visto ? 'novo' : ''}" href="${e.href}"><span>${e.ic}</span><span class="cresce">${e.txt}</span><small>${quando(e.t)}</small></a>`).join('') : '<p class="muted" style="padding:12px">Nada novo por enquanto.</p>');
+  document.body.appendChild(box);
+  box.querySelector('#nv-fechar').onclick = () => box.remove();
+  box.querySelectorAll('.nv-item').forEach(a => a.addEventListener('click', () => box.remove()));
+  gravarVisto(new Date().toISOString()); S.novidadesN = 0;
+  const b = document.getElementById('sino-n'); if (b) b.hidden = true;
+  const sino = document.getElementById('sino'); if (sino) sino.classList.remove('tem');
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#sino')) abrirNovidades(); });
+setInterval(() => { if (S.user && S.igrejaId && !document.hidden) atualizarNovidades(); }, 60000);
 setInterval(() => { if (S.user && S.igrejaId && !document.hidden) atualizarAvisos(); }, 60000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && S.user && S.igrejaId) atualizarAvisos(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.user && S.igrejaId) { atualizarAvisos(); atualizarNovidades(); } });
 
 const cab = (t, p, a = '') => `<div class="ph"><div><h1>${t}</h1>${p ? `<p>${p}</p>` : ''}</div><div class="acts">${a}</div></div>`;
 

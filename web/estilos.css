@@ -551,3 +551,11 @@ ol.dias b{color:var(--accent);margin-right:6px;font-size:13px}
 .avisos-equipe{margin-bottom:12px;line-height:1.7}
 .avisos-equipe a{color:inherit;text-decoration:underline}
 @media (max-width:760px){.nav-item .badge{margin-left:6px}}
+
+/* Novidades (sino) */
+.sino{position:relative}.sino .badge{display:inline-block;margin-left:4px;background:#c0392b;color:#fff;border-radius:999px;padding:0 6px;font-size:11px;font-weight:700;min-width:18px;text-align:center}
+.sino.tem{border-color:#c0392b}
+.novidades-box{position:fixed;top:64px;right:12px;width:min(420px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:60}
+.novidades-box .nv-top{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface)}
+.nv-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-size:14px}
+.nv-item.novo{background:var(--gold-soft)}.nv-item small{color:var(--muted,#777);white-space:nowrap}
