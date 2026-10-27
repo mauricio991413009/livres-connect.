@@ -392,7 +392,7 @@ function render() {
 /* ------------------------------------------------------------------ */
 async function contarAvisos() {
   if (!sb || !S.igrejaId) return null;
-  const id = S.igrejaId, A = { oracao: 0, atend: 0, cadastros: 0 };
+  const id = S.igrejaId, A = { oracao: 0, atend: 0, cadastros: 0, estudos: 0 };
   const cont = q => q.then(r => (r && !r.error && r.count) || 0, () => 0);
   const tarefas = [];
   if (pode(['pastor', 'presbiterio', 'secretaria', 'lider', 'diacono'])) {
@@ -401,6 +401,10 @@ async function contarAvisos() {
   }
   if (pode(['pastor', 'presbiterio', 'secretaria'])) {
     tarefas.push(cont(sb.from('pessoas').select('id', { count: 'exact', head: true }).eq('igreja_id', id).eq('situacao', 'ativo').is('responsavel_id', null).in('origem', ['qr', 'estudos'])).then(n => A.cadastros = n));
+  }
+  if (pode(['pastor', 'presbiterio', 'secretaria', 'lider'])) {
+    const desde = new Date(Date.now() - 7 * 864e5).toISOString();
+    tarefas.push(cont(sb.from('estudos_alunos').select('id', { count: 'exact', head: true }).eq('igreja_id', id).gte('criado_em', desde)).then(n => A.estudos = n));
   }
   await Promise.all(tarefas);
   return A;
@@ -411,12 +415,14 @@ async function atualizarAvisos() {
   const marca = (k, n) => document.querySelectorAll(`[data-badge="${k}"]`).forEach(b => { b.textContent = n > 99 ? '99+' : n; b.hidden = !n; b.setAttribute('aria-label', n + ' pendente' + (n === 1 ? '' : 's')); });
   marca('cuidado', A.oracao + A.atend);
   marca('visitantes', A.cadastros);
+  marca('estudos', A.estudos);
   const fx = document.getElementById('avisos-equipe');
   if (fx) {
     const it = [];
     if (A.oracao) it.push(`<a href="#/cuidado"><b>${A.oracao}</b> pedido${A.oracao === 1 ? '' : 's'} de oração ainda sem oração</a>`);
     if (A.atend) it.push(`<a href="#/cuidado"><b>${A.atend}</b> pessoa${A.atend === 1 ? '' : 's'} querendo conversar com um pastor</a>`);
     if (A.cadastros) it.push(`<a href="#/visitantes"><b>${A.cadastros}</b> cadastro${A.cadastros === 1 ? '' : 's'} novo${A.cadastros === 1 ? '' : 's'} sem responsável</a>`);
+    if (A.estudos) it.push(`<a href="#/estudos"><b>${A.estudos}</b> aluno${A.estudos === 1 ? '' : 's'} novo${A.estudos === 1 ? '' : 's'} nos Estudos (últimos 7 dias)</a>`);
     fx.innerHTML = it.length ? `<div class="aviso ouro avisos-equipe"><b>Precisa da sua atenção:</b> ${it.join(' · ')}</div>` : '';
   }
 }
